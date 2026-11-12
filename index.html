@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>孳生源：黃昏調查</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#000;color:#d8d2c4;overflow:hidden;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.6}
+#cv{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+#grain{position:fixed;inset:-50%;width:200%;height:200%;pointer-events:none;opacity:.09;z-index:2;animation:gr .5s steps(4) infinite}
+@keyframes gr{0%{transform:translate(0,0)}25%{transform:translate(-4%,3%)}50%{transform:translate(3%,-5%)}75%{transform:translate(-2%,-2%)}100%{transform:translate(4%,4%)}}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:3;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.75) 100%)}
+#flash{position:fixed;inset:0;pointer-events:none;z-index:4;background:#a01010;opacity:0;transition:opacity .6s}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:5;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+#rec{position:absolute;top:14px;left:16px;font-size:14px;color:#e8e2d2;text-shadow:0 0 4px #000}
+#rec i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#d22;margin-right:6px;animation:bl 1.2s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+#obj{position:absolute;top:38px;left:16px;font-size:14px;color:#cfc7b0;max-width:70vw;text-shadow:0 0 4px #000;font-family:inherit}
+#stat{position:absolute;top:14px;right:16px;text-align:right;font-size:13px;color:#cfc7b0;text-shadow:0 0 4px #000}
+#bite{width:130px;height:7px;border:1px solid #6b6252;margin:5px 0 0 auto;background:rgba(0,0,0,.4)}
+#bite b{display:block;height:100%;width:0;background:#b3261e}
+#cross{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:rgba(230,225,210,.7)}
+#prompt{position:absolute;left:50%;top:56%;transform:translateX(-50%);font-size:15px;color:#f0e9d6;background:rgba(0,0,0,.55);padding:3px 12px;border:1px solid #5a5244;display:none;white-space:nowrap}
+#sub{position:absolute;left:50%;bottom:9%;transform:translateX(-50%);max-width:min(760px,88vw);text-align:center;font-size:17px;color:#f2ecdc;text-shadow:0 0 6px #000,0 1px 2px #000;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;opacity:0;transition:opacity .4s}
+#hint{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);font-size:12px;color:#8f8776;white-space:nowrap}
+.ov{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:rgba(4,4,6,.72);padding:16px;overflow:auto}
+.ov.open{display:flex}
+.pn{background:#12110f;border:1px solid #4a4336;max-width:680px;width:100%;padding:20px 22px;max-height:92vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;box-shadow:0 0 40px #000}
+.pn h2{margin:0 0 8px;font-size:21px;color:#efe7d2;letter-spacing:1px}
+.pn h3{margin:14px 0 4px;font-size:16px;color:#d9c893}
+.pn p{margin:6px 0}
+.step{font-size:12px;color:#b58a3c;letter-spacing:1px;font-family:ui-monospace,Menlo,monospace;margin-top:10px}
+.who{font-size:13px;color:#b58a3c}
+.say{font-size:17px;border-left:3px solid #6b5a34;padding:4px 12px;margin:6px 0 12px;color:#f0e9d6}
+.res{background:#1b1a17;border:1px solid #37322a;padding:9px 12px;margin:8px 0}
+button{font:inherit;color:#e6dfcc;background:#1e1c18;border:1px solid #5a5244;padding:9px 14px;cursor:pointer;text-align:left;line-height:1.5}
+@media (hover:hover){button:hover{border-color:#c9a44e;background:#27241e}}
+button:disabled{opacity:.4;cursor:default}
+button.pri{background:#6d1f18;border-color:#a3392e;color:#fff}
+@media (hover:hover){button.pri:hover{background:#85281f}}
+button.right{border-color:#5d9a61;background:#17261a;color:#cfe8cf;opacity:1}
+button.wrong{border-color:#a3392e;background:#2a1513;color:#e0a9a2}
+.col{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.row button{flex:1;text-align:center}
+.fb{margin-top:10px;padding:9px 12px;font-size:15px}
+.fb.good{background:#17261a;border-left:3px solid #5d9a61}
+.fb.bad{background:#2a1513;border-left:3px solid #a3392e}
+.mut{color:#8f8776;font-size:14px}
+.lv{background:#0b1113;border:1px solid #2c3a3d;margin:8px 0}
+.lv svg{display:block;width:100%;height:auto}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:600px){.cmp{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0}
+th,td{border:1px solid #37322a;padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#1b1a17;color:#d9c893}
+input{font:inherit;background:#0b0a09;color:#f0e9d6;border:1px solid #5a5244;padding:6px 8px;width:100%}
+.fg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.fg label{font-size:13px;display:flex;flex-direction:column;gap:4px;border:1px solid #37322a;padding:8px}
+.fg label.ok{border-color:#5d9a61}.fg label.no{border-color:#a3392e}
+.big{font-size:34px;font-weight:800;color:#d9c893;font-family:ui-monospace,Menlo,monospace}
+ul{margin:6px 0;padding-left:20px}li{margin:3px 0}
+#title .pn{max-width:620px;text-align:left;border-color:#6d1f18}
+#title h1{font-size:34px;margin:0;letter-spacing:6px;color:#efe7d2}
+#title .sub{color:#a3392e;letter-spacing:3px;font-family:ui-monospace,Menlo,monospace;font-size:13px;margin-bottom:12px}
+kbd{font-family:ui-monospace,Menlo,monospace;border:1px solid #5a5244;padding:0 6px;background:#1e1c18;font-size:13px}
+#touch{position:fixed;right:14px;bottom:60px;z-index:6;display:none;flex-direction:column;gap:10px}
+#touch button{width:66px;height:66px;border-radius:50%;text-align:center;background:rgba(30,28,24,.7);padding:0;font-size:15px;-webkit-user-select:none;user-select:none;touch-action:none}
+#touch button.ready{border-color:#e0b050;background:rgba(109,31,24,.85);color:#fff;box-shadow:0 0 12px rgba(224,176,80,.6)}
+#joy{position:fixed;z-index:6;width:110px;height:110px;margin:-55px 0 0 -55px;border:2px solid rgba(230,225,210,.35);border-radius:50%;display:none;pointer-events:none}
+#joy b{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:rgba(230,225,210,.35)}
+#tguide{position:fixed;inset:0;z-index:9;display:none;background:rgba(4,4,6,.78);color:#f0e9d6;font-size:16px}
+#tguide.open{display:block}
+#tguide .half{position:absolute;top:0;bottom:0;width:50%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:max(70px,16vh)!important;text-align:center;padding:16px}
+#tguide .half.l{left:0;border-right:2px dashed rgba(201,164,78,.6)}#tguide .half.r{right:0}
+#tguide .ic{font-size:44px;line-height:1;margin-bottom:10px;color:#e0b050}
+#tguide .bl{position:absolute;right:90px;font-size:14px;color:#e0b050;white-space:nowrap;transform:translateY(50%)}
+@media (orientation:landscape){#tguide .half.r{padding-right:210px}}
+body.touch #hint{display:none}
+body.touch #sub{max-width:calc(100vw - 120px);left:calc(50% - 45px);bottom:4%}
+#tguide .go{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);font-size:14px;color:#b58a3c;white-space:nowrap}
+#rot{display:none;position:fixed;top:86px;left:50%;transform:translateX(-50%);z-index:6;font-size:13px;color:#e0d6bc;background:rgba(0,0,0,.6);border:1px solid #5a5244;padding:3px 10px;white-space:nowrap;pointer-events:none}
+@media (orientation:portrait){body.touch.playing #rot{display:block}}
+
+button{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+/* 手機橫放等矮螢幕：縮小面板文字與間距，選項改兩欄 */
+@media (max-height:520px){
+ .ov{align-items:flex-start;padding:6px max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left))}
+ .pn{max-width:min(960px,100%);max-height:calc(100vh - 12px);max-height:calc(100dvh - 12px);padding:10px 14px;font-size:13px;line-height:1.45}
+ .pn h2{font-size:16px;margin:0 0 4px}.pn h3{font-size:14px;margin:8px 0 2px}.pn p{margin:3px 0}
+ .say{font-size:14px;margin:4px 0 6px;padding:2px 10px}.who{font-size:12px}.step{margin-top:5px;font-size:11px}
+ .res{padding:5px 9px;margin:4px 0}.mut{font-size:12px}
+ button{padding:7px 10px;font-size:13px;line-height:1.35}
+ .col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+ .row{margin-top:6px;gap:6px}
+ .fb{margin-top:6px;padding:6px 10px;font-size:13px}
+ .lv svg{max-height:24vh}
+ table{font-size:12px;margin:4px 0}th,td{padding:3px 6px}
+ .fg{gap:6px;margin:6px 0}.fg label{padding:5px}
+ ul{margin:4px 0}li{margin:1px 0}
+ #title h1{font-size:24px}#title .pn{max-width:min(760px,100%)}
+}
+
+/* 現場操作：一個畫面內放下說明、操作與選項 */
+#pn.game{max-width:min(1180px,100%);width:100%;height:calc(100vh - 32px);height:calc(100dvh - 32px);max-height:none;overflow:hidden;display:flex;flex-direction:column;padding:12px 14px}
+#pn.game>*:not(#fw){display:none!important}
+#pn.game #fw{flex:1;min-height:0;display:flex;flex-direction:column}
+.fwh{flex:0 0 auto;display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.fwh .step{margin:0}.fwh b{font-size:18px;color:#efe7d2}
+.fwm{flex:1;min-height:0;display:flex;gap:12px}
+.fwc{flex:1;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+.fws{flex:0 0 clamp(230px,30%,330px);min-height:0;overflow:auto;display:flex;flex-direction:column;gap:7px;font-size:14px}
+.fws p{margin:0}.fws .row,.fws .col{margin-top:0}.fws .fb{margin-top:0}.fws .lv{margin:0}
+.fws .cnt{font-size:17px;color:#e0b050;font-family:ui-monospace,Menlo,monospace}
+.fwc #fwtut{position:absolute;inset:0;overflow:auto;margin:0;z-index:3;background:rgba(14,13,11,.97);border:1px solid #6b5a34}
+@media (max-aspect-ratio:1/1){.fwm{flex-direction:column}.fws{flex:0 1 auto;max-height:45%}}
+@media (max-height:520px){#pn.game{height:calc(100vh - 12px);height:calc(100dvh - 12px);padding:8px 10px}.fwh{margin-bottom:4px}.fwh b{font-size:15px}.fws{font-size:12.5px;gap:5px;flex-basis:clamp(210px,34%,300px)}.fws .cnt{font-size:15px}.fws button{padding:6px 9px}.fws .col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<svg id="grain" xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>
+<div id="vig"></div><div id="flash"></div>
+<div id="hud">
+  <div id="rec"><i></i>REC <span id="clock">17:42</span></div>
+  <div id="obj"></div>
+  <div id="stat"><span id="cnt">已檢查 0 處</span><br>叮咬風險<div id="bite"><b></b></div><span id="bites"></span></div>
+  <div id="cross"></div><div id="prompt"></div>
+  <div id="sub"></div>
+  <div id="hint">WASD 移動　滑鼠 轉向　E 互動　F 手電筒　Shift 快走　M 手冊</div>
+</div>
+<div id="touch"><button id="tM">手冊</button><button id="tF">手電筒</button><button id="tE">互動</button></div>
+<div id="joy"><b></b></div>
+<div id="rot">手機橫放比較好操作</div>
+<div id="tguide"><div class="half l"><div class="ic">✥</div><b>左半邊：移動</b><p class="mut" style="color:#c8bfa8">手指按住往想去的方向拖<br>拖得越遠走得越快</p></div>
+<div class="half r"><div class="ic">⟲</div><b>右半邊：轉頭看</b><p class="mut" style="color:#c8bfa8">手指按住左右、上下滑動</p></div>
+<div class="bl" style="bottom:245px">查幼蟲特徵 →</div><div class="bl" style="bottom:169px">開關燈 →</div><div class="bl" style="bottom:93px">出現提示時按 →</div>
+<div class="go">點一下畫面開始</div></div>
+
+<div class="ov open" id="title"><div class="pn">
+  <div class="sub">DENGUE FIELD SURVEY ／ 新手訓練</div>
+  <h1>孳生源</h1>
+  <p style="letter-spacing:4px;color:#b58a3c;margin:0 0 14px">黃昏調查</p>
+  <p>南部某里，本土登革熱病例持續增加。你是剛報到的調查員，身上只有一支手電筒和一支撈杓。</p>
+  <p class="mut">在每個地點：先取得同意，找出所有積水容器，辨識幼蟲是斑蚊還是家蚊，選擇正確的處置，最後回到機車回報指數。</p>
+  <div class="col" id="levels"></div>
+  <p class="mut" id="ctrlHelp" style="margin-top:12px"><kbd>WASD</kbd> 移動　<kbd>滑鼠</kbd> 轉向（不能鎖定滑鼠時，按住拖曳或用 <kbd>←</kbd><kbd>→</kbd>）　<kbd>E</kbd> 互動　<kbd>F</kbd> 手電筒　<kbd>M</kbd> 手冊</p>
+  <div class="row"><button id="btnMan0" style="text-align:center">先看調查手冊</button></div>
+  <p class="mut" id="loadErr" style="color:#e0a9a2"></p>
+</div></div>
+<div class="ov" id="panel"><div class="pn" id="pn"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.LEVELS={};</script>
+<script src="levels/humans.js"></script>
+<script src="levels/fieldwork.js"></script>
+<script src="levels/props.js"></script>
+<script src="levels/alley.js"></script>
+<script src="levels/market-tex.js"></script>
+<script src="levels/market-hd.js"></script>
+<script src="levels/market.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+window.LEVELS=window.LEVELS||{};
+if(!window.THREE){$('loadErr').textContent='3D 函式庫載入失敗，請重新整理頁面。';}
+/* ================= 幼蟲示意圖 ================= */
+function larvaSVG(type,labels){
+  const ae=type==='aedes',len=ae?36:80,w=ae?13:7;let seg='';
+  for(let i=0;i<8;i++){const x=112+i*22,h=26-i*1.3;
+    seg+=`<rect x="${x}" y="${60-h/2}" width="21" height="${h}" rx="5" fill="#9b7a58" stroke="#3d2e20"/>`;
+    if(i<7)seg+=`<line x1="${x+10}" y1="${60-h/2}" x2="${x+16}" y2="${60-h/2-9}" stroke="#b79a78"/><line x1="${x+10}" y1="${60+h/2}" x2="${x+16}" y2="${60+h/2+9}" stroke="#b79a78"/>`;}
+  let tf='';
+  if(ae){const p=len*.55;tf=`<line x1="${p}" y1="${-w/2}" x2="${p+5}" y2="${-w/2-11}" stroke="#e8dcc4" stroke-width="1.4"/><line x1="${p}" y1="${-w/2}" x2="${p-3}" y2="${-w/2-11}" stroke="#e8dcc4" stroke-width="1.4"/>`;}
+  else[.3,.45,.6,.75].forEach(f=>{const p=len*f;tf+=`<line x1="${p}" y1="${-w/2}" x2="${p+4}" y2="${-w/2-9}" stroke="#e8dcc4" stroke-width="1.2"/><line x1="${p}" y1="${-w/2}" x2="${p-2}" y2="${-w/2-9}" stroke="#e8dcc4" stroke-width="1.2"/>`;});
+  const lab=labels?`<text x="${ae?150:180}" y="14" font-size="14" fill="#e0b050" font-weight="700">${ae?'呼吸管短而粗，呼吸管毛 1 對':'呼吸管細長，呼吸管毛多對'}</text>`:'';
+  return `<svg viewBox="0 0 420 110" xmlns="http://www.w3.org/2000/svg"><rect width="420" height="110" fill="#0b1113"/>
+  <circle cx="210" cy="55" r="150" fill="#16262a" opacity=".6"/>
+  <ellipse cx="45" cy="60" rx="17" ry="14" fill="#6b523a"/><circle cx="37" cy="55" r="3" fill="#0b0705"/><line x1="30" y1="52" x2="18" y2="44" stroke="#9b7a58" stroke-width="2"/><line x1="29" y1="62" x2="16" y2="66" stroke="#9b7a58" stroke-width="1.5"/>
+  <ellipse cx="86" cy="60" rx="27" ry="21" fill="#a98863" stroke="#3d2e20"/><line x1="80" y1="40" x2="74" y2="26" stroke="#b79a78"/><line x1="92" y1="40" x2="98" y2="27" stroke="#b79a78"/><line x1="80" y1="80" x2="74" y2="94" stroke="#b79a78"/><line x1="92" y1="80" x2="98" y2="93" stroke="#b79a78"/>
+  ${seg}<rect x="286" y="56" width="22" height="12" rx="4" fill="#9b7a58" stroke="#3d2e20"/><ellipse cx="315" cy="58" rx="8" ry="2.5" fill="#d9c7ad"/><ellipse cx="315" cy="66" rx="8" ry="2.5" fill="#d9c7ad"/>
+  <g transform="translate(286,54) rotate(-28)"><rect x="0" y="${-w/2}" width="${len}" height="${w}" rx="${w/2.5}" fill="#5a3f28" stroke="#c9b08a" stroke-width=".6"/>${tf}</g>${lab}
+  <text x="30" y="104" font-size="11" fill="#7f8a8c">頭</text><text x="78" y="104" font-size="11" fill="#7f8a8c">胸</text><text x="190" y="104" font-size="11" fill="#7f8a8c">腹部</text><text x="${ae?296:320}" y="104" font-size="11" fill="#7f8a8c">呼吸管</text></svg>`;
+}
+
+
+let L=null,G=null,renderer=null,AC=null,whineG=null,paused=true,started=false,looping=false;
+const keys={};
+function newState(){return{log:{},treated:{},unlocked:{},mistakes:[],bites:0,bite:0,t:0,firstBite:false,formDone:false,ev:{}};}
+/* ================= 音效 ================= */
+function initAudio(){ if(AC) return; try{
+  AC=new (window.AudioContext||window.webkitAudioContext)();
+  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=180;
+  const dg=AC.createGain();dg.gain.value=.11;lp.connect(dg);dg.connect(AC.destination);
+  [49,52.3,98.4].forEach((f,i)=>{const o=AC.createOscillator();o.type=i?'sawtooth':'sine';o.frequency.value=f;o.connect(lp);o.start();});
+  const w=AC.createOscillator();w.type='sawtooth';w.frequency.value=610;
+  const l=AC.createOscillator();l.frequency.value=11;const lg=AC.createGain();lg.gain.value=38;l.connect(lg);lg.connect(w.frequency);
+  const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1200;bp.Q.value=2;
+  whineG=AC.createGain();whineG.gain.value=0;w.connect(bp);bp.connect(whineG);whineG.connect(AC.destination);w.start();l.start();
+ }catch(e){AC=null;} }
+function burst(dur,freq,vol,type){ if(!AC) return; try{
+  const n=AC.sampleRate*dur,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);
+  const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type=type||'lowpass';f.frequency.value=freq;
+  const g=AC.createGain();g.gain.value=vol;s.connect(f);f.connect(g);g.connect(AC.destination);s.start();}catch(e){} }
+function beep(){ if(!AC) return; try{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=880;g.gain.value=.03;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.08);burst(.25,3000,.04,'highpass');}catch(e){} }
+
+
+/* ================= 字幕 / HUD ================= */
+let subQ=[],subT=0;
+function sub(t,d,radio){subQ.push({t,d:d||4.5,radio});}
+function tickSub(dt){
+  if(subT>0){subT-=dt;if(subT<=0)$('sub').style.opacity=0;}
+  else if(subQ.length&&!paused){const s=subQ.shift();$('sub').textContent=s.t;$('sub').style.opacity=1;subT=s.d;if(s.radio)beep();}
+}
+function setObj(){
+  $('obj').textContent=L.objective(G.S);
+  $('cnt').textContent='已檢查 '+Object.keys(G.S.log).length+' 處';
+  $('bites').textContent=G.S.bites?'被叮 '+G.S.bites+' 次':'';
+}
+/* ================= 面板 ================= */
+function openPanel(html){paused=true;$('pn').classList.remove('game');for(const k in keys)keys[k]=false;try{document.exitPointerLock&&document.exitPointerLock();}catch(e){}$('pn').innerHTML=html;$('panel').classList.add('open');$('pn').scrollTop=0;}
+function closePanel(){$('panel').classList.remove('open');paused=false;lock();}
+function lock(){try{const p=$('cv').requestPointerLock&&$('cv').requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+function mistake(cat,text){G.S.mistakes.push({cat,text});}
+
+const REACT={angry:'（對方的臉色沉下來，不想再跟你說話。）',silent:'（對方看著你，沒有再說什麼。）',locked:'（門鎖著，打不開。）',radio:'學長：「……你再想想。」'};
+function runDialogue(key,onDone,onFail){
+  const D=L.DLG[key],S=G.S,npc=G.npcs[key],hu=npc&&npc.userData.human;let i=0;
+  S.dfail=S.dfail||{};S.dmiss=S.dmiss||{};const retry=S.dfail[key];
+  (function render(){
+    const n=D.nodes[i];
+    openPanel(`<div class="who">${D.who}</div>${i===0&&retry&&D.again?`<div class="mut">${D.again}</div>`:''}<div class="say">${n.say}</div><div class="mut">你會怎麼回應？</div>
+      <div class="col" id="ch">${n.ch.map((c,k)=>`<button data-k="${k}">${c.t}</button>`).join('')}</div><div id="dfb"></div>`);
+    $('ch').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      const c=n.ch[+b.dataset.k];$('ch').querySelectorAll('button').forEach(x=>x.disabled=true);
+      if(c.ok){b.classList.add('right');
+        const last=i===D.nodes.length-1;
+        if(last&&hu&&npc.userData.mood0)hu.setMood(npc.userData.mood0);
+        $('dfb').innerHTML=`<div class="fb good">${c.fb}</div>${last?`<p class="say" style="margin-top:12px">${D.done}</p>`:''}<div class="row"><button class="pri" id="dn">${last?(D.btn||'進去'):'繼續'}</button></div>`;
+        $('dn').onclick=()=>{i++;if(i<D.nodes.length)render();else{closePanel();onDone();}};
+      }else{
+        const mk=key+'_'+i+'_'+b.dataset.k;if(!S.dmiss[mk]){S.dmiss[mk]=1;mistake('溝通',`${D.who}：${c.t.replace(/[「」]/g,'')}　→ ${c.fb}`);}
+        S.dfail[key]=(S.dfail[key]||0)+1;b.classList.add('wrong');
+        const tone=c.tone||'angry';
+        if(tone==='angry'){burst(.5,160,.35);if(hu){if(!npc.userData.mood0)npc.userData.mood0=hu.L.mood||'calm';hu.setMood('angry');}}
+        else if(tone==='locked'){burst(.6,320,.12,'bandpass');setTimeout(()=>burst(.6,300,.12,'bandpass'),180);}
+        else if(tone==='radio')burst(.2,1400,.15,'bandpass');
+        $('dfb').innerHTML=`<p class="say" style="margin-top:12px">${c.re||REACT[tone]}</p><div class="fb bad">${c.fb}</div><p class="mut">對話中斷。${D.retryHint||'再和對方說話，就能重新開始。'}</p><div class="row"><button class="pri" id="dn">離開</button></div>`;
+        $('dn').onclick=()=>{closePanel();setObj();if(onFail)onFail(c);};
+      }
+      $('dn').scrollIntoView({block:'nearest'});
+    });
+  })();
+}
+
+function runBrief(key){
+  const B=L.BRIEF[key],S=G.S,f='brief_'+key;
+  function pages(P,done,btn){let i=0;(function r(){const last=i===P.length-1,q=P[i];
+    openPanel(`<div class="who">${B.who}</div>${q.h?`<div class="step">${q.h}</div>`:''}<div class="say">${q.t}</div><p class="mut">${i+1} / ${P.length}</p><div class="row"><button class="pri" id="dn">${last?(btn||'了解'):'繼續'}</button></div>`);
+    $('dn').onclick=()=>{i++;if(i<P.length)r();else{closePanel();if(done)done();}};})();}
+  function menu(){openPanel(`<div class="who">${B.who}</div><div class="say">${B.ask}</div><div class="col" id="ch">${B.topics.map((t,k)=>`<button data-k="${k}">${t.t}</button>`).join('')}<button data-k="x">沒事了</button></div>`);
+    $('ch').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.dataset.k==='x'){closePanel();return;}const t=B.topics[+b.dataset.k];
+      if(t.report){closePanel();report();return;}pages(t.pages.map(k=>typeof k==='number'?B.pages[k]:k),menu,'好');});}
+  if(!S.ev[f])pages(B.pages,()=>{S.ev[f]=1;setObj();if(B.after)sub(B.after,5);},B.btn);else menu();
+}
+
+function inspectItem(id){
+  const o=L.ITEMS[id],S=G.S;
+  if(S.treated[id]){openPanel(`<div class="step">已記錄</div><h2>${o.name}</h2><p>${o.result}</p><p class="mut">積水：${o.water?'有':'無'}${o.larvae?'　幼蟲：'+(o.larvae==='aedes'?'斑蚊':'家蚊'):''}</p><p class="mut">${o.learn}</p><div class="row"><button class="pri" id="cl">返回</button></div>`);$('cl').onclick=closePanel;return;}
+  openPanel(`<div class="step">發現</div><h2>${o.name}</h2><p>${o.desc}</p><div class="row"><button class="pri" id="bi">用手電筒照，下撈杓</button><button id="cl">先不看</button></div>`);
+  $('cl').onclick=closePanel;
+  $('bi').onclick=()=>{
+    S.log[id]=true;burst(.25,900,.08,'bandpass');setObj();
+    const h=`<div class="step">檢查結果</div><h2>${o.name}</h2><div class="res">${o.result}</div>`;
+    if(o.larvae){
+      $('pn').innerHTML=h+'<div id="fw"></div><div id="act"></div>';
+      const sp=o.larvae==='aedes'?'斑蚊':'家蚊',other=o.larvae==='aedes'?'家蚊':'斑蚊';
+      FW.capture(o,()=>FW.vial(o,()=>mistake('幼蟲辨識',`${o.name}：在玻璃瓶中把${sp}幼蟲認成${other}。`),()=>{
+        FW.clear(o,why=>mistake('清除孳生源',`${o.name}：${why}。`),()=>{
+          $('pn').classList.remove('game');
+          $('fw').innerHTML=`<div class="fb good" style="margin-top:10px">已採樣、鑑定為${sp}幼蟲，並${(o.clear||'pour')==='pour'?'清除積水':'投藥'}。</div>`;actions(true);});}));
+    }else{$('pn').innerHTML=h+'<div id="act"></div>';actions();}
+    function actions(after){
+      $('act').innerHTML=`<div class="step">${after?'後續處置與衛教':'處置'}</div><p>${after?'接下來要怎麼做，才不會再積水？':'你會怎麼處理？'}</p><div class="col" id="acts">${o.acts.map((a,k)=>`<button data-k="${k}">${a.t}</button>`).join('')}</div><div id="afb"></div>`;
+      let first=true;
+      $('acts').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+        const a=o.acts[+b.dataset.k];
+        if(a.ok){$('acts').querySelectorAll('button').forEach(x=>x.disabled=true);b.classList.add('right');
+          S.treated[id]=true;const it=G.items[id];if(it&&it.swarm){G.scene.remove(it.swarm);it.swarm=null;}
+          $('afb').innerHTML=`<div class="fb good">${a.fb}</div><p class="mut">${o.learn}</p><div class="row"><button class="pri" id="cl2">記錄，繼續調查</button></div>`;
+          $('cl2').onclick=()=>{closePanel();setObj();};$('cl2').scrollIntoView({block:'nearest'});
+        }else{ if(first)mistake('處置',`${o.name}：選了「${a.t}」　→ ${a.fb}`);first=false;b.disabled=true;b.classList.add('wrong');
+          $('afb').innerHTML=`<div class="fb bad">${a.fb} 再選一次。</div>`;}
+      });
+    }
+  };
+}
+
+function counts(ids){
+  const os=ids.map(i=>L.ITEMS[i]),n=Object.keys(L.SITES).length;
+  const water=os.filter(o=>o.water).length,pos=os.filter(o=>o.larvae==='aedes').length;
+  const ph=new Set(ids.filter(i=>L.ITEMS[i].larvae==='aedes').map(i=>L.ITEMS[i].site)).size;
+  return{n,water,pos,ph,HI:ph/n*100,CI:water?pos/water*100:0,BI:pos/n*100};
+}
+const r1=v=>Math.round(v*10)/10;
+function report(){
+  const S=G.S,ids=Object.keys(S.log).sort(),P=counts(ids);
+  const rows=ids.map(i=>{const o=L.ITEMS[i];return`<tr><td>${L.SITES[o.site].name}</td><td>${o.name}</td><td>${o.water?'有':'無'}</td><td>${o.larvae?(o.larvae==='aedes'?'斑蚊':'家蚊')+(o.pupae?'（含蛹）':''):'—'}</td></tr>`;}).join('');
+  openPanel(`<div class="who">無線電・學長</div><div class="say">回來了？把數字報給我。照你自己的紀錄算。</div>
+   <table><tr><th>地點</th><th>容器</th><th>積水</th><th>幼蟲</th></tr>${rows||'<tr><td colspan="4">沒有任何紀錄</td></tr>'}</table>
+   <p class="mut">調查 ${P.n} 戶${L.reportNote?'（'+L.reportNote+'）':''}。住宅指數＝斑蚊陽性戶數÷調查戶數×100%。容器指數＝斑蚊陽性容器數÷積水容器數×100%。布氏指數＝斑蚊陽性容器數÷調查戶數×100（不是百分比）。乾的容器不算積水容器；家蚊不算陽性。</p>
+   <div class="fg"><label id="L-HI">住宅指數（%）<input id="f-HI" type="number" step="0.1" inputmode="decimal"></label><label id="L-CI">容器指數（%）<input id="f-CI" type="number" step="0.1" inputmode="decimal"></label><label id="L-BI">布氏指數<input id="f-BI" type="number" step="0.1" inputmode="decimal"></label></div>
+   <div id="ffb"></div><div class="row"><button class="pri" id="bc">回報</button><button id="bk">還沒查完，回去繼續</button><button id="be" style="display:none" class="pri">結束調查</button></div>`);
+  $('bk').onclick=closePanel;
+  $('bc').onclick=()=>{let ok=0;['HI','CI','BI'].forEach(k=>{const v=parseFloat($('f-'+k).value),good=!isNaN(v)&&Math.abs(v-P[k])<=.6;$('L-'+k).className=good?'ok':'no';if(good)ok++;});
+    if(!S.formDone){S.formDone=true;S.formOK=ok;if(ok<3)mistake('指數計算',`第一次回報時，3 個指數對了 ${ok} 個。`);}
+    $('ffb').innerHTML=ok===3?`<div class="fb good">學長：「收到。」</div>`:`<div class="fb bad">學長：「不對，再算一次。」照你的紀錄：住宅指數 ${r1(P.HI)}%、容器指數 ${r1(P.CI)}%、布氏指數 ${r1(P.BI)}。</div>`;
+    $('be').style.display='';$('bk').style.display='none';};
+  $('be').onclick=ending;
+}
+function ending(){
+  const S=G.S,ids=Object.keys(S.log),P=counts(ids),T=counts(Object.keys(L.ITEMS)),I=L.ITEMS;
+  const missed=Object.keys(I).filter(i=>!S.log[i]),mp=missed.filter(i=>I[i].larvae==='aedes');
+  const untreated=ids.filter(i=>!S.treated[i]);
+  const cats={};S.mistakes.forEach(m=>(cats[m.cat]=cats[m.cat]||[]).push(m.text));
+  const verdict=mp.length===0&&S.mistakes.length<=2?'這裡今晚乾淨了。':mp.length===0?'孳生源都找到了，但過程還有要修正的地方。':`你漏掉了 ${mp.length} 個斑蚊陽性容器。那裡的幼蟲，大約一週內會變成蚊子。`;
+  openPanel(`<div class="step">REC 停止</div><h2>調查結束</h2><p class="say">${verdict}</p>
+   <table><tr><th></th><th>你的回報</th><th>實際</th></tr>
+   <tr><td>斑蚊陽性戶數</td><td>${P.ph}</td><td>${T.ph}</td></tr><tr><td>積水容器數</td><td>${P.water}</td><td>${T.water}</td></tr><tr><td>斑蚊陽性容器數</td><td>${P.pos}</td><td>${T.pos}</td></tr>
+   <tr><td>住宅指數</td><td>${r1(P.HI)}%</td><td>${r1(T.HI)}%</td></tr><tr><td>容器指數</td><td>${r1(P.CI)}%</td><td>${r1(T.CI)}%</td></tr><tr><td>布氏指數</td><td>${r1(P.BI)}</td><td>${r1(T.BI)}</td></tr></table>
+   ${L.extraEnding?L.extraEnding(S):''}
+   <h3>漏掉的地方</h3>${missed.length?`<ul>${missed.map(i=>`<li><b>${L.SITES[I[i].site].name}・${I[i].name}</b>：${I[i].result}${I[i].larvae==='aedes'?' <b style="color:#e0a9a2">（斑蚊陽性）</b>':''}</li>`).join('')}</ul><p class="mut">漏掉陽性容器，指數會被低估，上面的人會以為這裡沒事。</p>`:'<p>全部找到了。</p>'}
+   ${untreated.length?`<h3>看了但沒有處理</h3><ul>${untreated.map(i=>`<li>${I[i].name}</li>`).join('')}</ul>`:''}
+   <h3>被叮咬</h3><p>${S.bites?`${S.bites} 次。斑蚊在清晨和黃昏最活躍。調查時穿淺色長袖、使用防蚊液，不要在陽性容器旁邊久站。`:'0 次。'}</p>
+   <h3>需要修正的地方</h3>${S.mistakes.length?Object.entries(cats).map(([c,a])=>`<p><b>${c}</b>（${a.length}）</p><ul>${a.map(t=>`<li>${t}</li>`).join('')}</ul>`).join(''):'<p>每一題第一次就答對。</p>'}
+   <h3>這次調查的重點</h3><ul>${L.takeaways.map(t=>`<li>${t}</li>`).join('')}</ul>
+   <p class="mut">遊戲中處理完容器後蚊群立刻消失，是為了讓你知道處理成功；實際上已經羽化的成蚊還會活一段時間。</p>
+   <div class="row"><button class="pri" id="rs">重新調查這一關</button><button id="mn">回到關卡選單</button></div>`);
+  $('rs').onclick=()=>startLevel(L.id);
+  $('mn').onclick=showTitle;
+}
+function manual(){
+  openPanel(`<h2>調查手冊</h2>
+  <h3>斑蚊與家蚊幼蟲</h3><div class="cmp"><div><div class="lv">${larvaSVG('aedes',true)}</div><p class="mut">斑蚊</p></div><div><div class="lv">${larvaSVG('culex',true)}</div><p class="mut">家蚊</p></div></div>
+  <table><tr><th></th><th>斑蚊</th><th>家蚊</th></tr><tr><td>呼吸管</td><td>短而粗</td><td>細長</td></tr><tr><td>呼吸管毛</td><td>1 對</td><td>多對</td></tr><tr><td>常見的水</td><td>較乾淨的積水：花瓶、底盤、水桶、輪胎、地下室</td><td>有機質多的污水：水溝、污水桶</td></tr><tr><td>卵</td><td>一顆一顆黏在水面上方的容器壁，耐乾燥</td><td>黏成一團卵塊浮在水面</td></tr><tr><td>傳播登革熱</td><td>會</td><td>不會</td></tr></table>
+  <h3>處置：巡、倒、清、刷</h3><p>巡視室內外；倒掉積水；清除不用的容器；刷洗容器內壁去除卵。還要用的儲水容器加蓋。無法清除的大面積積水由防疫人員投藥，並通報管理單位。</p>
+  <h3>指數</h3><p>住宅指數＝斑蚊陽性戶數÷調查戶數×100%<br>容器指數＝斑蚊陽性容器數÷積水容器數×100%<br>布氏指數＝斑蚊陽性容器數÷調查戶數×100</p>
+  <h3>溝通</h3><p>表明身分與目的；先回應對方的顧慮；尊重對方的權責和使用需求；邀請一起檢查；罰則是最後手段。</p>
+  <div class="row"><button class="pri" id="cl">關閉</button></div>`);
+  $('cl').onclick=()=>{ if(started)closePanel(); else $('panel').classList.remove('open'); };
+}
+
+
+/* ================= 3D 工具 ================= */
+function tex(draw,size){const c=document.createElement('canvas');c.width=c.height=size||64;draw(c.getContext('2d'),c.width);const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
+function noise(g,n,r,gg,b,v){for(let y=0;y<n;y++)for(let x=0;x<n;x++){const k=(Math.random()-.5)*v;g.fillStyle=`rgb(${r+k|0},${gg+k|0},${b+k|0})`;g.fillRect(x,y,1,1);}}
+function stains(g,n,c,k){for(let i=0;i<k;i++){g.fillStyle=c;const x=Math.random()*n,w=2+Math.random()*5;g.globalAlpha=.25+Math.random()*.3;g.fillRect(x,Math.random()*n*.5,w,8+Math.random()*30);}g.globalAlpha=1;}
+let MAT=null;
+function mats(){
+  const P=(t,o)=>new THREE.MeshPhongMaterial(Object.assign({map:t,shininess:4},o||{}));
+  return{
+   plaster:P(tex((g,n)=>{noise(g,n,150,138,118,26);stains(g,n,'#3a3226',7);})),
+   old:P(tex((g,n)=>{noise(g,n,112,110,96,34);stains(g,n,'#1e2a1c',14);stains(g,n,'#2a1e16',6);})),
+   brick:P(tex((g,n)=>{noise(g,n,96,52,42,24);g.fillStyle='#2e2622';for(let y=0;y<n;y+=8){g.fillRect(0,y,n,1);for(let x=(y/8%2)*8;x<n;x+=16)g.fillRect(x,y,1,8);}stains(g,n,'#1a1512',5);})),
+   concrete:P(tex((g,n)=>{noise(g,n,98,98,96,22);stains(g,n,'#2c2f2c',8);})),
+   asphalt:P(tex((g,n)=>{noise(g,n,52,50,54,26);})),
+   tile:P(tex((g,n)=>{noise(g,n,128,112,92,14);g.fillStyle='#3a3026';for(let i=0;i<n;i+=16){g.fillRect(i,0,1,n);g.fillRect(0,i,n,1);}}),{shininess:20}),
+   wood:P(tex((g,n)=>{noise(g,n,82,56,36,16);g.fillStyle='rgba(30,18,10,.5)';for(let i=0;i<n;i+=7)g.fillRect(0,i,n,1);})),
+   dark:P(tex((g,n)=>{noise(g,n,40,38,36,14);})),
+   metal:P(tex((g,n)=>{noise(g,n,80,84,88,12);g.fillStyle='rgba(20,22,24,.6)';for(let i=0;i<n;i+=6)g.fillRect(0,i,n,1);}),{shininess:30}),
+   water:new THREE.MeshPhongMaterial({color:0x1d3a44,shininess:90,specular:0x99aaaa,transparent:true,opacity:.86}),
+   foul:new THREE.MeshPhongMaterial({color:0x1c2410,shininess:60,specular:0x556644})
+  };
+}
+const C=hex=>new THREE.MeshPhongMaterial({color:hex,shininess:6,flatShading:true});
+
+
+function makeKit(){
+  const {scene,col,rayList,items,npcs,anim}=G,M=MAT;
+  function box(w,h,d,x,y,z,mat,o){o=o||{};const g=new THREE.BoxGeometry(w,h,d),uv=g.attributes.uv,s=o.uv||(mat.userData&&mat.userData.uv)||2.2;
+    const dims=[[d,h],[d,h],[w,d],[w,d],[w,h],[w,h]];
+    for(let f=0;f<6;f++)for(let v=0;v<4;v++){const i=f*4+v;uv.setXY(i,uv.getX(i)*dims[f][0]/s,uv.getY(i)*dims[f][1]/s+(o.v0&&(f<2||f>3)?o.v0/s:0));}
+    const m=new THREE.Mesh(g,mat);m.position.set(x,y,z);scene.add(m);rayList.push(m);
+    if(o.collide!==false)col.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,y0:y-h/2,y1:y+h/2,id:o.id});return m;}
+  function wX(x,za,zb,y0,h,mat,gaps,dh){dh=dh||2.2;let cur=za;(gaps||[]).forEach(g=>{if(g[0]>cur)box(.3,h,g[0]-cur,x,y0+h/2,(cur+g[0])/2,mat);if(h>dh+.25)box(.3,h-dh,g[1]-g[0],x,y0+dh+(h-dh)/2,(g[0]+g[1])/2,mat,{collide:false,v0:dh});cur=g[1];});if(cur<zb)box(.3,h,zb-cur,x,y0+h/2,(cur+zb)/2,mat);}
+  function wZ(z,xa,xb,y0,h,mat,gaps,dh){dh=dh||2.2;let cur=xa;(gaps||[]).forEach(g=>{if(g[0]>cur)box(g[0]-cur,h,.3,(cur+g[0])/2,y0+h/2,z,mat);if(h>dh+.25)box(g[1]-g[0],h-dh,.3,(g[0]+g[1])/2,y0+dh+(h-dh)/2,z,mat,{collide:false,v0:dh});cur=g[1];});if(cur<xb)box(xb-cur,h,.3,(cur+xb)/2,y0+h/2,z,mat);}
+  const wallX=(x,za,zb,h,mat,gaps)=>wX(x,za,zb,0,h,mat,gaps),wallZ=(z,xa,xb,h,mat,gaps)=>wZ(z,xa,xb,0,h,mat,gaps);
+  function mesh(geo,mat,x,y,z,parent){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);(parent||scene).add(m);return m;}
+  function interact(obj,it){obj.traverse(o=>{if(o.isMesh){o.userData.it=it;if(rayList.indexOf(o)<0)rayList.push(o);}});}
+  function signTex(lines,bg,fg,px){px=px||34;return tex((g,n)=>{g.fillStyle=bg;g.fillRect(0,0,n,n);g.fillStyle=fg;g.textAlign='center';g.font='bold '+px+'px sans-serif';const lh=px*1.3;lines.forEach((l,i)=>g.fillText(l,n/2,n/2-((lines.length-1)*lh/2)+i*lh+px*.36));},256);}
+  function P(t,o,uv){const m=new THREE.MeshPhongMaterial(Object.assign({map:t,shininess:4},o||{}));if(uv)m.userData.uv=uv;return m;}
+  function photo(uri){const t=new THREE.TextureLoader().load(uri);t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
+  function swarm(x,y,z,spread){const n=36,p=new Float32Array(n*3),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));
+    const pts=new THREE.Points(g,new THREE.PointsMaterial({color:0x9a9488,size:.035}));pts.frustumCulled=false;pts.userData={c:[x,y,z],ph:Array.from({length:n},()=>[Math.random()*6.3,Math.random()*6.3,.6+Math.random()*1.6,(.25+Math.random()*.8)*(spread||1)])};scene.add(pts);return pts;}
+  const cyl=(rt,rb,h,mat,y,p,seg)=>mesh(new THREE.CylinderGeometry(rt,rb,h,seg||9),mat,0,y,0,p);
+  const bucket=(color,water,y0)=>{const g=new THREE.Group();cyl(.2,.15,.36,C(color),.18+(y0||0),g);if(water)cyl(.185,.185,.01,water,.34+(y0||0),g);return g;};
+  const HUMAN=window.HUMAN||(window.HUMAN=makeHuman(THREE));
+  function body(h,look){const L=typeof look==='object'&&look?Object.assign({},look):{shirt:look||0x5a5e66};L.h=(L.h||1)*h;const g=HUMAN(L);(G.humans=G.humans||[]).push(g);return g;}
+  function person(x,y,z,h,color,key,label,after){const g=body(h,color);g.position.set(x,y,z);scene.add(g);interact(g,{type:'npc',key,label,after});npcs[key]=g;
+    col.push({x0:x-.3,x1:x+.3,z0:z-.3,z1:z+.3,y0:y,y1:y+1.8,id:'npc'+key});return g;}
+  function moveNpc(key,x,y,z){const g=npcs[key];g.position.set(x,y,z);G.col=G.col.filter(c=>c.id!=='npc'+key);G.col.push({x0:x-.3,x1:x+.3,z0:z-.3,z1:z+.3,y0:y,y1:y+1.8,id:'npc'+key});}
+  function figure(x,y,z){const g=body(1.05,{turn:true});g.traverse(o=>{if(o.isMesh)o.material=new THREE.MeshBasicMaterial({color:0x020202});});g.position.set(x,y,z);g.visible=false;scene.add(g);G.figure=g;return g;}
+  function addItem(id,grp,x,y,z,r,sy,spread){grp.position.set(x,y,z);scene.add(grp);interact(grp,{type:'item',id,label:'檢查：'+L.ITEMS[id].label});
+    items[id]={grp,x,y,z,swarm:L.ITEMS[id].larvae==='aedes'?swarm(x,y+(sy||.9),z,spread):null};if(r)G.col.push({x0:x-r,x1:x+r,z0:z-r,z1:z+r,y0:y,y1:y+1.2});}
+  function scooter(x,z,ry){const sc=new THREE.Group();mesh(new THREE.BoxGeometry(.45,.5,1.3),C(0x2f5d50),0,.65,0,sc);mesh(new THREE.CylinderGeometry(.27,.27,.12,8),C(0x111111),0,.27,.6,sc).rotation.z=Math.PI/2;mesh(new THREE.CylinderGeometry(.27,.27,.12,8),C(0x111111),0,.27,-.6,sc).rotation.z=Math.PI/2;mesh(new THREE.BoxGeometry(.5,.4,.1),C(0x2f5d50),0,1.05,-.55,sc);mesh(new THREE.BoxGeometry(.5,.35,.45),C(0xd8d0b8),0,1.05,.5,sc);
+    sc.position.set(x,0,z);sc.rotation.y=ry||0;scene.add(sc);G.col.push({x0:x-.7,x1:x+.7,z0:z-.7,z1:z+.7,y0:0,y1:1.5});interact(sc,{type:'van',label:'回報：防疫機車'});return sc;}
+  function unblock(id){G.col=G.col.filter(c=>c.id!==id);}
+  return{body,human:HUMAN,talk:(k,cb,f)=>runDialogue(k,cb,f),THREE,scene,col,rayList,items,npcs,anim,G,M,C,box,wX,wZ,wallX,wallZ,mesh,interact,signTex,P,photo,tex,noise,stains,swarm,cyl,bucket,person,moveNpc,figure,addItem,scooter,unblock,sub,burst,setObj};
+}
+function build(){
+  const bg=L.bg||0x150d18,scene=new THREE.Scene();scene.background=new THREE.Color(bg);scene.fog=new THREE.FogExp2(bg,L.fog||.05);
+  const st=L.start,camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.08,70);camera.rotation.order='YXZ';camera.position.set(st.x,(st.y||0)+1.6,st.z);scene.add(camera);
+  const hemi=new THREE.HemisphereLight(0x5b4a78,0x2a1a12,.5);scene.add(hemi);
+  const torch=new THREE.SpotLight(0xfff0d0,2.1,26,.56,.6,1.1);torch.position.set(.15,-.1,0);camera.add(torch);torch.target.position.set(0,-.05,-1);camera.add(torch.target);
+  G={scene,camera,hemi,torch,col:[],rayList:[],items:{},npcs:{},anim:[],S:newState(),yaw:st.yaw||0,pitch:0,bob:0,step:0,target:null,torchOn:true,flick:0,figure:null,
+     foot:st.y||0,camY:(st.y||0)+1.6,surf:L.surfaces||[{x0:-1e4,x1:1e4,z0:-1e4,z1:1e4,y:0}]};
+  if(!MAT)MAT=mats();
+  G.K=makeKit();L.build(G.K);
+  resize();setObj();
+}
+/* ================= 互動 ================= */
+function doInteract(){
+  if(paused||!G||!G.target)return;const it=G.target,S=G.S;
+  if(it.type==='item')inspectItem(it.id);
+  else if(it.type==='npc'||it.type==='door'||it.type==='talk'){const k=it.key||L.doorKey;
+    if(!S.unlocked[k])runDialogue(k,()=>{S.unlocked[k]=true;if(L.onUnlock)L.onUnlock(k,G.K);setObj();});
+    else{const t=it.after||(L.npcLine&&L.npcLine[k]);if(t)sub(t,4.5);}}
+  else if(it.type==='deco')sub(it.text,5.5);
+  else if(it.type==='fn')it.fn();
+  else if(it.type==='brief')runBrief(it.key);
+  else if(it.type==='van')report();
+}
+function intro(){subQ=[];subT=0;$('sub').style.opacity=0;(L.intro||[]).forEach(t=>sub(t,5,true));}
+/* ================= 主迴圈 ================= */
+const ray=window.THREE?new THREE.Raycaster():null;let last=0,touchMove=null;
+function groundY(x,z,foot){let best=-1e9;const s=G.surf;for(let i=0;i<s.length;i++){const a=s[i];if(x<a.x0||x>a.x1||z<a.z0||z>a.z1)continue;let h=a.y;
+  if(a.axis){const t=a.axis==='x'?(x-a.x0)/(a.x1-a.x0):(z-a.z0)/(a.z1-a.z0);h=a.ya+(a.yb-a.ya)*t;}if(h<=foot+.6&&h>best)best=h;}return best<-1e8?foot:best;}
+function hit(x,z){const r=.3,c=G.col,f=G.foot;for(let i=0;i<c.length;i++){const a=c[i];if(x>a.x0-r&&x<a.x1+r&&z>a.z0-r&&z<a.z1+r&&(a.y0===undefined||(a.y0<f+1.7&&a.y1>f+.45)))return true;}return false;}
+function frame(now){
+  requestAnimationFrame(frame);if(!G||!started)return;
+  const dt=Math.min(.05,(now-last)/1000||0);last=now;const S=G.S,cam=G.camera;
+  if(!paused){
+    S.t+=dt;
+    if(keys.ArrowLeft)G.yaw+=dt*1.9;if(keys.ArrowRight)G.yaw-=dt*1.9;if(keys.ArrowUp)G.pitch+=dt;if(keys.ArrowDown)G.pitch-=dt;
+    G.pitch=Math.max(-1.2,Math.min(1.2,G.pitch));
+    let f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0);
+    if(touchMove){f=-touchMove.y;s=touchMove.x;}
+    const len=Math.hypot(f,s),run=keys.ShiftLeft||keys.ShiftRight,p=cam.position;
+    if(len>.05){const sp=(run?5.2:3.1)*dt/Math.max(1,len),sn=Math.sin(G.yaw),cs=Math.cos(G.yaw);
+      const dx=(-sn*f+cs*s)*sp,dz=(-cs*f-sn*s)*sp;
+      if(!hit(p.x+dx,p.z))p.x+=dx;if(!hit(p.x,p.z+dz))p.z+=dz;
+      G.bob+=dt*(run?13:9);G.step+=dt*(run?1.6:1);if(G.step>.48){G.step=0;burst(.07,500+Math.random()*200,.05);}
+    }
+    const gy=groundY(p.x,p.z,G.foot);G.foot=gy<G.foot?Math.max(gy,G.foot-dt*9):gy;
+    G.camY+=(G.foot+1.6-G.camY)*Math.min(1,dt*14);
+    p.y=G.camY+Math.sin(G.bob)*.035;cam.rotation.set(G.pitch,G.yaw,Math.sin(G.bob*.5)*.006);
+    const amb=L.ambient?L.ambient(p,G.foot):.5;
+    G.hemi.intensity+=(amb-G.hemi.intensity)*Math.min(1,dt*3);
+    if(G.flick>0){G.flick-=dt;G.torch.intensity=(G.flick>.9||(G.flick<.55&&G.flick>.4))?0:2.1;if(G.flick<=0&&G.figure)G.figure.visible=false;}
+    else G.torch.intensity=G.torchOn?2.1+Math.sin(S.t*40)*.03:0;
+    if(L.tick)L.tick(G.K,dt,p);
+    let near=0;
+    for(const id in G.items){const it=G.items[id];if(!it.swarm)continue;const u=it.swarm.userData,a=it.swarm.geometry.attributes.position;
+      for(let i=0;i<u.ph.length;i++){const h=u.ph[i],t=S.t*h[2];a.setXYZ(i,u.c[0]+Math.sin(t+h[0])*h[3]*.6+Math.sin(t*3.1+h[1])*.08,u.c[1]+Math.sin(t*1.7+h[1])*.35+Math.sin(t*4.3)*.05,u.c[2]+Math.cos(t*1.3+h[0])*h[3]*.6);}
+      a.needsUpdate=true;const d=Math.hypot(p.x-it.x,p.z-it.z)-(it.r||0)+Math.abs((it.y||0)-G.foot)*2.5;near=Math.max(near,Math.max(0,1-d/6.5));}
+    if(whineG)try{whineG.gain.setTargetAtTime(near*near*.09,AC.currentTime,.15);}catch(e){}
+    S.bite=Math.max(0,S.bite+(near>.35?near*.085:-.05)*dt);
+    if(S.bite>=1){S.bite=0;S.bites++;$('flash').style.transition='none';$('flash').style.opacity=.45;setTimeout(()=>{$('flash').style.transition='opacity .9s';$('flash').style.opacity=0;},60);burst(.15,2500,.12,'highpass');
+      sub(S.firstBite?'又被叮了。':'你被叮了。在陽性容器旁邊站越久，被叮的機會越高。先處理掉，或是離開。',4.5);S.firstBite=true;setObj();}
+    $('bite').firstChild.style.width=(S.bite*100)+'%';
+    ray.setFromCamera({x:0,y:0},cam);ray.far=2.9;const h=ray.intersectObjects(G.rayList,false)[0];
+    G.target=h&&h.object.userData.it&&h.object.visible?h.object.userData.it:null;
+    if(G.target&&(G.target.type==='door'||G.target.hideAfter)&&S.unlocked[G.target.key||L.doorKey])G.target=null;
+    $('tE').classList.toggle('ready',!!G.target);const pr=$('prompt');if(G.target){pr.style.display='block';pr.textContent=(IS_TOUCH?'按「互動」：':'[E] ')+G.target.label+(G.target.type==='item'&&S.treated[G.target.id]?'（已處理）':'');}else pr.style.display='none';
+    G.anim.forEach(fn=>fn(S.t));
+    if(G.humans)G.humans.forEach(h=>{if(h.visible)h.userData.human.update(dt,cam);});
+    const mins=42+Math.floor(S.t/20);$('clock').textContent=(17+Math.floor(mins/60))+':'+String(mins%60).padStart(2,'0');
+  }else if(whineG)try{whineG.gain.setTargetAtTime(0,AC.currentTime,.1);}catch(e){}
+  tickSub(dt);
+  if(!$('panel').classList.contains('open')||!G.rendered){renderer.render(G.scene,cam);G.rendered=true;}
+}
+function resize(){if(!renderer||!G)return;const w=innerWidth,h=innerHeight,s=Math.max(1,Math.round(h/330));renderer.setSize(Math.max(1,Math.floor(w/s)),Math.max(1,Math.floor(h/s)),false);G.camera.aspect=w/h;G.camera.updateProjectionMatrix();}
+/* ================= 輸入 ================= */
+addEventListener('resize',resize);
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;keys[e.code]=true;
+  if(!started)return;
+  if(e.code==='KeyE'&&!paused)doInteract();
+  if(e.code==='KeyF'&&!paused){G.torchOn=!G.torchOn;burst(.03,3000,.08,'highpass');}
+  if(e.code==='KeyM'&&!paused)manual();
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();});
+addEventListener('keyup',e=>{keys[e.code]=false;});
+let drag=false;const cv=$('cv');
+cv.addEventListener('mousedown',e=>{if(paused)return;if(document.pointerLockElement===cv){doInteract();}else{drag=true;lock();}});
+addEventListener('mouseup',()=>drag=false);
+addEventListener('mousemove',e=>{if(paused||!G)return;if(document.pointerLockElement===cv||drag){G.yaw-=e.movementX*.0023;G.pitch-=e.movementY*.0023;}});
+let tL=null,tR=null;
+cv.addEventListener('touchstart',e=>{if(!IS_TOUCH)setTouchUI();for(const t of e.changedTouches){if(t.clientX<innerWidth/2&&!tL){tL={id:t.identifier,x:t.clientX,y:t.clientY};const j=$('joy');j.style.left=t.clientX+'px';j.style.top=t.clientY+'px';j.firstChild.style.transform='';j.style.display='block';}else if(!tR)tR={id:t.identifier,x:t.clientX,y:t.clientY};}e.preventDefault();},{passive:false});
+cv.addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(tL&&t.identifier===tL.id){const dx=(t.clientX-tL.x)/50,dy=(t.clientY-tL.y)/50;touchMove={x:Math.max(-1,Math.min(1,dx)),y:Math.max(-1,Math.min(1,dy))};$('joy').firstChild.style.transform=`translate(${touchMove.x*33}px,${touchMove.y*33}px)`;}
+  if(tR&&t.identifier===tR.id&&G&&!paused){G.yaw-=(t.clientX-tR.x)*.005;G.pitch-=(t.clientY-tR.y)*.005;tR.x=t.clientX;tR.y=t.clientY;}}e.preventDefault();},{passive:false});
+cv.addEventListener('touchend',e=>{for(const t of e.changedTouches){if(tL&&t.identifier===tL.id){tL=null;touchMove=null;$('joy').style.display='none';}if(tR&&t.identifier===tR.id)tR=null;}});
+$('tE').onclick=doInteract;$('tF').onclick=()=>{if(G&&!paused){G.torchOn=!G.torchOn;burst(.03,3000,.08,'highpass');}};$('tM').onclick=()=>{if(started&&!paused)manual();};
+/* ================= 觸控裝置 ================= */
+const IS_TOUCH_DEV=(window.matchMedia&&matchMedia('(pointer: coarse)').matches)||('ontouchstart' in window&&navigator.maxTouchPoints>0);
+let IS_TOUCH=false,guided=false;
+function setTouchUI(){IS_TOUCH=true;document.body.classList.add('touch');
+  $('hint').textContent='左半邊拖曳移動　右半邊拖曳轉向　提示出現時按「互動」';
+  $('ctrlHelp').innerHTML='<b style="color:#e0b050">手機操作</b>：畫面<b>左半邊</b>按住拖曳＝移動；<b>右半邊</b>滑動＝轉頭看。畫面中央出現提示時，按右下角的<b>「互動」</b>。<b>「手電筒」</b>開關燈，<b>「手冊」</b>查幼蟲特徵和公式。建議手機橫放；用電腦玩，操作會更順手。';
+  if(started)$('touch').style.display='flex';}
+if(IS_TOUCH_DEV)setTouchUI();
+function showTouchGuide(){if(!IS_TOUCH||guided)return;guided=true;paused=true;$('tguide').classList.add('open');}
+$('tguide').addEventListener('click',()=>{$('tguide').classList.remove('open');if(started&&!$('panel').classList.contains('open'))paused=false;});
+$('tguide').addEventListener('touchend',e=>{e.preventDefault();$('tguide').click();},{passive:false});
+
+/* 面板內的防誤觸：手指拖動或面板剛捲動時，不把放開當成點擊 */
+['panel','title'].forEach(function(idp){const pn=$(idp);let sx=0,sy=0,moved=false,last=0,lastTouch=-1e9,touchScroll=0;
+  pn.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;moved=false;touchScroll=last;lastTouch=performance.now();},{capture:true,passive:true});
+  pn.addEventListener('touchmove',e=>{const t=e.touches[0];if(Math.hypot(t.clientX-sx,t.clientY-sy)>10)moved=true;},{capture:true,passive:true});
+  pn.addEventListener('scroll',()=>{last=performance.now();},{capture:true,passive:true});
+  pn.addEventListener('click',e=>{const touch=performance.now()-lastTouch<1500;if(touch&&e.target.closest&&e.target.closest('button')&&(moved||lastTouch-touchScroll<250)){e.stopPropagation();e.preventDefault();moved=false;}},true);
+});
+/* ================= 關卡選單 ================= */
+function showTitle(){started=false;paused=true;$('touch').style.display='none';document.body.classList.remove('playing');try{document.exitPointerLock&&document.exitPointerLock();}catch(e){}$('panel').classList.remove('open');$('title').classList.add('open');$('sub').style.opacity=0;subQ=[];}
+function startLevel(id){
+  if(!window.THREE)return;
+  $('loadErr').style.color='#c8bfa8';$('loadErr').textContent='場景載入中……';setTimeout(()=>startLevel2(id),30);}
+function startLevel2(id){
+  try{
+    L=LEVELS[id];
+    if(!renderer){renderer=new THREE.WebGLRenderer({canvas:cv,antialias:false});renderer.setPixelRatio(1);}
+    initAudio();if(AC&&AC.state==='suspended')AC.resume();
+    build();$('title').classList.remove('open');$('panel').classList.remove('open');started=true;paused=false;lock();intro();document.body.classList.add('playing');if(IS_TOUCH){$('touch').style.display='flex';showTouchGuide();}
+    if(!looping){looping=true;requestAnimationFrame(frame);}$('loadErr').textContent='';$('loadErr').style.color='#e0a9a2';
+  }catch(err){$('loadErr').textContent='無法啟動 3D 畫面（這個瀏覽器可能不支援 WebGL）：'+err.message;console.error(err);}
+}
+$('btnMan0').onclick=manual;
+(function(){const box=$('levels');Object.keys(LEVELS).forEach(id=>{const l=LEVELS[id],b=document.createElement('button');b.className='pri';b.dataset.level=id;
+  b.innerHTML=`<b>${l.name}</b><br><span style="font-size:14px;opacity:.8">${l.blurb}</span>`;b.onclick=()=>startLevel(id);box.appendChild(b);});})();
+</script>
+</body>
+</html>
