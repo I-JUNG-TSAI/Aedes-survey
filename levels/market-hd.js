@@ -297,7 +297,7 @@ const F={MT,rbox,beam,rod,tube,trashBag,add,
  cabinet(x,y,z,ry){const g=new THREE.Group();add(new THREE.BoxGeometry(.9,1.5,.5),MT.wood,g,0,.75,0);add(new THREE.BoxGeometry(.02,1.3,.01),MT.dark,g,0,.78,.255);
    [-.06,.06].forEach(dx=>add(new THREE.BoxGeometry(.02,.1,.03),MT.grey,g,dx,.8,.27));g.position.set(x,y,z);g.rotation.y=ry||0;scene.add(flat(g));},
  // 不鏽鋼水塔（含支架、管線、滴水）
- waterTower(x,z){const g=new THREE.Group(),R0=.95,yb=1.72,H0=1.45,P=[V2(.001,yb-.12),V2(R0*.6,yb-.1),V2(R0*.92,yb-.05),V2(R0,yb+.04)];
+ waterTower(x,z,o){o=o||{};const g=new THREE.Group(),R0=.95,yb=1.72,H0=1.45,P=[V2(.001,yb-.12),V2(R0*.6,yb-.1),V2(R0*.92,yb-.05),V2(R0,yb+.04)];
    [.32,.72,1.12].forEach(h=>{P.push(V2(R0,yb+h-.035),V2(R0+.028,yb+h-.015),V2(R0+.028,yb+h+.015),V2(R0,yb+h+.035));});
    P.push(V2(R0,yb+H0),V2(R0*.97,yb+H0+.08),V2(R0*.86,yb+H0+.15),V2(R0*.55,yb+H0+.21),V2(.27,yb+H0+.23),V2(.27,yb+H0+.29),V2(.001,yb+H0+.3));
    add(new THREE.LatheGeometry(P,40),MT.steel,g);
@@ -312,7 +312,7 @@ const F={MT,rbox,beam,rod,tube,trashBag,add,
    rod(V3(.95,yb-.75,.55),V3(.95,.05,.55),.04,MT.pvc,g,8);add(new THREE.TorusGeometry(.07,.012,5,10),MT.red,g,.95,1.0,.62);rod(V3(.95,1.0,.55),V3(.95,1.0,.63),.008,MT.iron,g);
    add(new THREE.BoxGeometry(.14,.18,.1),MT.grey,g,.95,.7,.55);
    rod(V3(-.5,yb+H0+.18,.3),V3(-.5,yb+H0+.6,.3),.03,MT.pvc,g);
-   const tw=flat(g);tw.position.set(x,0,z);scene.add(tw);
+   const tw=flat(g);tw.position.set(x,o.y||0,z);if(o.ry)tw.rotation.y=o.ry;scene.add(tw);if(o.drip===false)return tw;
    // 滴水
    const drop=new THREE.Mesh(new THREE.SphereGeometry(.018,6,5),new THREE.MeshPhongMaterial({color:0xaac8d0,shininess:120,specular:0xffffff,transparent:true,opacity:.8}));scene.add(drop);
    const ripple=new THREE.Mesh(new THREE.RingGeometry(.02,.04,16),new THREE.MeshBasicMaterial({color:0x9ab0b8,transparent:true,opacity:.6,side:DS}));ripple.rotation.x=-PI/2;scene.add(ripple);

@@ -230,7 +230,7 @@ function runDialogue(key,onDone,onFail){
   (function render(){
     const n=D.nodes[i];
     openPanel(`<div class="who">${D.who}</div>${i===0&&retry&&D.again?`<div class="mut">${D.again}</div>`:''}<div class="say">${n.say}</div><div class="mut">你會怎麼回應？</div>
-      <div class="col" id="ch">${n.ch.map((c,k)=>`<button data-k="${k}">${c.t}</button>`).join('')}</div><div id="dfb"></div>`);
+      <div class="col" id="ch">${n.ch.map((c,k)=>[k,Math.random()]).sort((p,q)=>p[1]-q[1]).map(([k])=>`<button data-k="${k}">${n.ch[k].t}</button>`).join('')}</div><div id="dfb"></div>`);
     $('ch').querySelectorAll('button').forEach(b=>b.onclick=()=>{
       const c=n.ch[+b.dataset.k];$('ch').querySelectorAll('button').forEach(x=>x.disabled=true);
       if(c.ok){b.classList.add('right');
