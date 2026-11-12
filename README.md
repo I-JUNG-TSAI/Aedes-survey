@@ -24,10 +24,9 @@ python3 -m http.server 8000
 | 檔案 | 內容 |
 |---|---|
 | `index.html` | 引擎：介面、輸入（含手機觸控）、對話系統、檢查流程、報告與結局 |
-| `levels/alley.js` | 第一關「黃昏的巷子」：陳阿嬤家、空屋、公寓地下室 |
-| `levels/market.js` | 第二關「廢棄市場與民宅調查」：一樓市場、二樓住家、頂樓花園 |
-| `levels/market-hd.js` | 第二關的高解析度程序材質與精細物件（水塔、廁所、垃圾等） |
-| `levels/market-tex.js` | 第二關使用的小型照片材質（base64） |
+| `levels/market.js` | 第一關「廢棄市場與民宅調查」：一樓市場、二樓住家、頂樓花園 |
+| `levels/market-hd.js` | 第一關的高解析度程序材質與精細物件（水塔、廁所、垃圾等） |
+| `levels/market-tex.js` | 第一關使用的小型照片材質（base64） |
 | `levels/props.js` | 容器與盆栽模型庫（水桶、花盆、底盤、植物等） |
 | `levels/fieldwork.js` | 現場小遊戲：滴管採樣、玻璃瓶鑑定、倒水／投藥 |
 | `levels/humans.js` | 人物模型（PS1 風格、可換裝、姿勢與表情） |
@@ -39,11 +38,15 @@ python3 -m http.server 8000
 - `SITES`：調查地點
 - `ITEMS`：可檢查的容器（積水、幼蟲種類、處置選項、衛教說明）
 - `DLG`：對話。每個選項有 `ok`（正確）、`fb`（說明）、`tone`（答錯時的反應類型：`angry`／`silent`／`locked`／`radio`）、`re`（答錯時對方的反應）
-- `BRIEF`：學長簡報（第二關）
+- `BRIEF`：學長簡報
 - `build(K)`：建立場景；`tick`：關卡事件；`onUnlock`：對話成功後的變化
 
 ## 待專家確認
 
-- 投藥與倒除的判斷（C2、M7、G2 設為投藥）
+- 投藥與倒除的判斷（M7、G2 設為投藥）
 - Bti 相關說明文字
 - 激動住戶情境中的法律用語（目前未引用具體條文）
+
+## 版本紀錄
+
+- 原本的第一關「黃昏的巷子」（`levels/alley.js`）已移除，保留在初始提交 `9d83be8` 中，需要時可從 git 歷史取回。

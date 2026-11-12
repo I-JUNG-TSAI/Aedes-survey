@@ -1,4 +1,4 @@
-/* 第二關：廢棄市場與民宅調查
+/* 第一關：廢棄市場與民宅調查
    一樓：收掉的市場　二樓：住家　頂樓：花園
    場景依現場照片製作；門牌、車牌、人物均為虛構。 */
 (function(){
@@ -101,7 +101,7 @@ function openX(K){const G=K.G,e=G.S.ev,dr=G.doorX;if(e.xBusy)return;e.xBusy=1;
     ()=>K.interact(dr,{type:'fn',label:'無線電回報：二樓之2',fn:radio}));
   setTimeout(()=>{if(G!==K.G)return;K.talk('X',()=>{shut();K.interact(dr,{type:'deco',label:'查看：二樓之2',text:'門後還在罵。'});setTimeout(()=>{if(G!==K.G)return;radio();},700);},
     ()=>{shut();K.sub('（門被用力甩上。）',3);K.interact(dr,{type:'fn',label:'敲門：二樓之2',fn:()=>openX(K)});});},900);}
-LEVELS.market={id:'market',name:'第二關　廢棄市場與民宅調查',blurb:'一樓是收掉的市場，二樓還住著人，頂樓有人種花。',
+LEVELS.market={id:'market',name:'第一關　廢棄市場與民宅調查',blurb:'一樓是收掉的市場，二樓還住著人，頂樓有人種花。',
  start:{x:3.9,y:0,z:5.2,yaw:0},bg:0x140f1a,fog:.05,SITES,ITEMS,DLG,
  BRIEF:{S:{who:'學長',btn:'了解，出發',ask:'還有什麼要問的？',after:'學長：「先去找市場入口那個阿伯。」',
   pages:[
