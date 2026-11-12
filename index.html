@@ -347,10 +347,10 @@ function ending(){
    ${L.extraEnding?L.extraEnding(S):''}
    <h3>漏掉的地方</h3>${missed.length?`<ul>${missed.map(i=>`<li><b>${L.SITES[I[i].site].name}・${I[i].name}</b>：${I[i].result}${I[i].larvae==='aedes'?' <b style="color:#e0a9a2">（斑蚊陽性）</b>':''}</li>`).join('')}</ul><p class="mut">漏掉陽性容器，指數會被低估，上面的人會以為這裡沒事。</p>`:'<p>全部找到了。</p>'}
    ${untreated.length?`<h3>看了但沒有處理</h3><ul>${untreated.map(i=>`<li>${I[i].name}</li>`).join('')}</ul>`:''}
-   <h3>被叮咬</h3><p>${S.bites?`${S.bites} 次。斑蚊在清晨和黃昏最活躍。調查時穿淺色長袖、使用防蚊液，不要在陽性容器旁邊久站。`:'0 次。'}</p>
+   <h3>被叮咬</h3><p>${S.bites?`${S.bites} 次。斑蚊在清晨和黃昏最活躍。調查時穿淺色長袖、使用防蚊液，不要在積水容器旁邊久站。`:'0 次。'}</p>
    <h3>需要修正的地方</h3>${S.mistakes.length?Object.entries(cats).map(([c,a])=>`<p><b>${c}</b>（${a.length}）</p><ul>${a.map(t=>`<li>${t}</li>`).join('')}</ul>`).join(''):'<p>每一題第一次就答對。</p>'}
    <h3>這次調查的重點</h3><ul>${L.takeaways.map(t=>`<li>${t}</li>`).join('')}</ul>
-   <p class="mut">遊戲中處理完容器後蚊群立刻消失，是為了讓你知道處理成功；實際上已經羽化的成蚊還會活一段時間。</p>
+   <p class="mut">${L.ambientMosq?'遊戲中處理掉陽性容器後，蚊子出現的頻率會馬上下降，是為了讓你感受到處理的效果；實際上已經羽化的成蚊還會活一段時間。':'遊戲中處理完容器後蚊群立刻消失，是為了讓你知道處理成功；實際上已經羽化的成蚊還會活一段時間。'}</p>
    <div class="row"><button class="pri" id="rs">重新調查這一關</button><button id="mn">回到關卡選單</button></div>`);
   $('rs').onclick=()=>startLevel(L.id);
   $('mn').onclick=showTitle;
@@ -417,7 +417,7 @@ function makeKit(){
   function moveNpc(key,x,y,z){const g=npcs[key];g.position.set(x,y,z);G.col=G.col.filter(c=>c.id!=='npc'+key);G.col.push({x0:x-.3,x1:x+.3,z0:z-.3,z1:z+.3,y0:y,y1:y+1.8,id:'npc'+key});}
   function figure(x,y,z){const g=body(1.05,{turn:true});g.traverse(o=>{if(o.isMesh)o.material=new THREE.MeshBasicMaterial({color:0x020202});});g.position.set(x,y,z);g.visible=false;scene.add(g);G.figure=g;return g;}
   function addItem(id,grp,x,y,z,r,sy,spread){grp.position.set(x,y,z);scene.add(grp);interact(grp,{type:'item',id,label:'檢查：'+L.ITEMS[id].label});
-    items[id]={grp,x,y,z,swarm:L.ITEMS[id].larvae==='aedes'?swarm(x,y+(sy||.9),z,spread):null};if(r)G.col.push({x0:x-r,x1:x+r,z0:z-r,z1:z+r,y0:y,y1:y+1.2});}
+    items[id]={grp,x,y,z,swarm:L.ITEMS[id].larvae==='aedes'&&!L.ambientMosq?swarm(x,y+(sy||.9),z,spread):null};if(r)G.col.push({x0:x-r,x1:x+r,z0:z-r,z1:z+r,y0:y,y1:y+1.2});}
   function scooter(x,z,ry){const sc=new THREE.Group();mesh(new THREE.BoxGeometry(.45,.5,1.3),C(0x2f5d50),0,.65,0,sc);mesh(new THREE.CylinderGeometry(.27,.27,.12,8),C(0x111111),0,.27,.6,sc).rotation.z=Math.PI/2;mesh(new THREE.CylinderGeometry(.27,.27,.12,8),C(0x111111),0,.27,-.6,sc).rotation.z=Math.PI/2;mesh(new THREE.BoxGeometry(.5,.4,.1),C(0x2f5d50),0,1.05,-.55,sc);mesh(new THREE.BoxGeometry(.5,.35,.45),C(0xd8d0b8),0,1.05,.5,sc);
     sc.position.set(x,0,z);sc.rotation.y=ry||0;scene.add(sc);G.col.push({x0:x-.7,x1:x+.7,z0:z-.7,z1:z+.7,y0:0,y1:1.5});interact(sc,{type:'van',label:'回報：防疫機車'});return sc;}
   function unblock(id){G.col=G.col.filter(c=>c.id!==id);}
@@ -461,7 +461,7 @@ function frame(now){
     G.pitch=Math.max(-1.2,Math.min(1.2,G.pitch));
     let f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0);
     if(touchMove){f=-touchMove.y;s=touchMove.x;}
-    const len=Math.hypot(f,s),run=keys.ShiftLeft||keys.ShiftRight,p=cam.position;
+    const len=Math.hypot(f,s),run=keys.ShiftLeft||keys.ShiftRight,p=cam.position;G.moving=len>.05?(run?2:1):0;
     if(len>.05){const sp=(run?5.2:3.1)*dt/Math.max(1,len),sn=Math.sin(G.yaw),cs=Math.cos(G.yaw);
       const dx=(-sn*f+cs*s)*sp,dz=(-cs*f-sn*s)*sp;
       if(!hit(p.x+dx,p.z))p.x+=dx;if(!hit(p.x,p.z+dz))p.z+=dz;
@@ -479,10 +479,19 @@ function frame(now){
     for(const id in G.items){const it=G.items[id];if(!it.swarm)continue;const u=it.swarm.userData,a=it.swarm.geometry.attributes.position;
       for(let i=0;i<u.ph.length;i++){const h=u.ph[i],t=S.t*h[2];a.setXYZ(i,u.c[0]+Math.sin(t+h[0])*h[3]*.6+Math.sin(t*3.1+h[1])*.08,u.c[1]+Math.sin(t*1.7+h[1])*.35+Math.sin(t*4.3)*.05,u.c[2]+Math.cos(t*1.3+h[0])*h[3]*.6);}
       a.needsUpdate=true;const d=Math.hypot(p.x-it.x,p.z-it.z)-(it.r||0)+Math.abs((it.y||0)-G.foot)*2.5;near=Math.max(near,Math.max(0,1-d/6.5));}
+    let rate=near>.35?near*.085:-.05;
+    if(L.ambientMosq){const I=L.ITEMS,pos=Object.keys(I).filter(i=>I[i].larvae==='aedes'),left=pos.filter(i=>!S.treated[i]).length,MQ=S.mq||(S.mq={next:14+Math.random()*14,t:0,on:0});
+      if(!G.amb){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(15),3));G.amb=new THREE.Points(g,new THREE.PointsMaterial({color:0x1a1814,size:.018}));G.amb.frustumCulled=false;G.scene.add(G.amb);}
+      if(!MQ.on){G.amb.visible=false;MQ.next-=dt*(.35+.65*(pos.length?left/pos.length:0));if(MQ.next<=0&&left>0){MQ.on=1;MQ.t=0;MQ.dur=4+Math.random()*5;}}
+      else{MQ.t+=dt;const k=Math.max(0,Math.min(1,MQ.t/1.5,(MQ.dur-MQ.t)/1.2));near=Math.max(near,k);G.amb.visible=true;
+        const a=G.amb.geometry.attributes.position,fx=-Math.sin(G.yaw),fz=-Math.cos(G.yaw);
+        for(let i=0;i<5;i++){const t=S.t*(1.3+i*.37)+i*2;a.setXYZ(i,p.x+fx*(.55+.25*Math.sin(t*1.7))+Math.sin(t)*.35,cam.position.y-.1+Math.sin(t*2.3+i)*.25,p.z+fz*(.55+.25*Math.cos(t*1.3))+Math.cos(t*1.1)*.35);}a.needsUpdate=true;
+        rate=k*(G.moving===2?.05:G.moving?.13:.26);
+        if(MQ.t>=MQ.dur){MQ.on=0;MQ.next=16+Math.random()*30;G.amb.visible=false;}}}
     if(whineG)try{whineG.gain.setTargetAtTime(near*near*.09,AC.currentTime,.15);}catch(e){}
-    S.bite=Math.max(0,S.bite+(near>.35?near*.085:-.05)*dt);
+    S.bite=Math.max(0,S.bite+rate*dt);
     if(S.bite>=1){S.bite=0;S.bites++;$('flash').style.transition='none';$('flash').style.opacity=.45;setTimeout(()=>{$('flash').style.transition='opacity .9s';$('flash').style.opacity=0;},60);burst(.15,2500,.12,'highpass');
-      sub(S.firstBite?'又被叮了。':'你被叮了。在陽性容器旁邊站越久，被叮的機會越高。先處理掉，或是離開。',4.5);S.firstBite=true;setObj();}
+      sub(S.firstBite?'又被叮了。':(L.biteHint||'你被叮了。在陽性容器旁邊站越久，被叮的機會越高。先處理掉，或是離開。'),4.5);S.firstBite=true;setObj();}
     $('bite').firstChild.style.width=(S.bite*100)+'%';
     ray.setFromCamera({x:0,y:0},cam);ray.far=2.9;const h=ray.intersectObjects(G.rayList,false)[0];
     G.target=h&&h.object.userData.it&&h.object.visible?h.object.userData.it:null;
