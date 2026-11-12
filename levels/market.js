@@ -117,6 +117,7 @@ LEVELS.market={id:'market',name:'第一關　廢棄市場與民宅調查',blurb:
    {t:'這棟樓的狀況？',pages:[2,3,4]},
    {t:'調查的流程？',pages:[5,6]},
    {t:'我查完了，回報結果。',report:1}]}},
+ scoreTasks(S){return [{name:'二樓之2 拒絕入戶',done:!!S.ev.angryDone},{name:'二樓之3 未入戶',done:!!S.unlocked.N}];},
  reportNote:'二樓之2拒絕入戶、二樓之3未入戶，都不計入',
  surfaces:[
   {x0:-40,x1:40,z0:-40,z1:20,y:0},

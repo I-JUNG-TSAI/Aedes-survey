@@ -143,7 +143,7 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webk
   <h1>孳生源</h1>
   <p style="letter-spacing:4px;color:#b58a3c;margin:0 0 14px">黃昏調查</p>
   <p>南部某里，本土登革熱病例持續增加。你是剛報到的調查員，身上只有一支手電筒和一支撈杓。</p>
-  <p class="mut">在每個地點：先取得同意，找出所有積水容器，辨識幼蟲是斑蚊還是家蚊，選擇正確的處置，最後回到機車回報指數。</p>
+  <p class="mut">在每個地點：先取得同意，找出所有積水容器，辨識幼蟲是斑蚊還是家蚊，選擇正確的處置，最後回到機車回報。</p>
   <div class="col" id="levels"></div>
   <p class="mut" id="ctrlHelp" style="margin-top:12px"><kbd>WASD</kbd> 移動　<kbd>滑鼠</kbd> 轉向（不能鎖定滑鼠時，按住拖曳或用 <kbd>←</kbd><kbd>→</kbd>）　<kbd>E</kbd> 互動　<kbd>F</kbd> 手電筒　<kbd>M</kbd> 手冊</p>
   <div class="row"><button id="btnMan0" style="text-align:center">先看調查手冊</button></div>
@@ -185,7 +185,7 @@ function larvaSVG(type,labels){
 
 let L=null,G=null,renderer=null,AC=null,whineG=null,paused=true,started=false,looping=false;
 const keys={};
-function newState(){return{log:{},treated:{},unlocked:{},mistakes:[],bites:0,bite:0,t:0,firstBite:false,formDone:false,ev:{}};}
+function newState(){return{log:{},treated:{},unlocked:{},mistakes:[],ans:{},bites:0,bite:0,t:0,firstBite:false,formDone:false,ev:{}};}
 /* ================= 音效 ================= */
 function initAudio(){ if(AC) return; try{
   AC=new (window.AudioContext||window.webkitAudioContext)();
@@ -221,7 +221,8 @@ function setObj(){
 function openPanel(html){paused=true;$('pn').classList.remove('game');for(const k in keys)keys[k]=false;try{document.exitPointerLock&&document.exitPointerLock();}catch(e){}$('pn').innerHTML=html;$('panel').classList.add('open');$('pn').scrollTop=0;}
 function closePanel(){$('panel').classList.remove('open');paused=false;lock();}
 function lock(){try{const p=$('cv').requestPointerLock&&$('cv').requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
-function mistake(cat,text){G.S.mistakes.push({cat,text});}
+function tally(cat,ok){const A=G.S.ans,c=A[cat]||(A[cat]={ok:0,bad:0});c[ok?'ok':'bad']++;}
+function mistake(cat,text){G.S.mistakes.push({cat,text});tally(cat,0);}
 
 const REACT={angry:'（對方的臉色沉下來，不想再跟你說話。）',silent:'（對方看著你，沒有再說什麼。）',locked:'（門鎖著，打不開。）',radio:'學長：「……你再想想。」'};
 function runDialogue(key,onDone,onFail){
@@ -233,7 +234,7 @@ function runDialogue(key,onDone,onFail){
       <div class="col" id="ch">${n.ch.map((c,k)=>[k,Math.random()]).sort((p,q)=>p[1]-q[1]).map(([k])=>`<button data-k="${k}">${n.ch[k].t}</button>`).join('')}</div><div id="dfb"></div>`);
     $('ch').querySelectorAll('button').forEach(b=>b.onclick=()=>{
       const c=n.ch[+b.dataset.k];$('ch').querySelectorAll('button').forEach(x=>x.disabled=true);
-      if(c.ok){b.classList.add('right');
+      if(c.ok){b.classList.add('right');S.dok=S.dok||{};if(!S.dok[key+'_'+i]){S.dok[key+'_'+i]=1;tally('溝通',1);}
         const last=i===D.nodes.length-1;
         if(last&&hu&&npc.userData.mood0)hu.setMood(npc.userData.mood0);
         $('dfb').innerHTML=`<div class="fb good">${c.fb}</div>${last?`<p class="say" style="margin-top:12px">${D.done}</p>`:''}<div class="row"><button class="pri" id="dn">${last?(D.btn||'進去'):'繼續'}</button></div>`;
@@ -275,8 +276,8 @@ function inspectItem(id){
     if(o.larvae){
       $('pn').innerHTML=h+'<div id="fw"></div><div id="act"></div>';
       const sp=o.larvae==='aedes'?'斑蚊':'家蚊',other=o.larvae==='aedes'?'家蚊':'斑蚊';
-      FW.capture(o,()=>FW.vial(o,()=>mistake('幼蟲辨識',`${o.name}：在玻璃瓶中把${sp}幼蟲認成${other}。`),()=>{
-        FW.clear(o,why=>mistake('清除孳生源',`${o.name}：${why}。`),()=>{
+      FW.capture(o,()=>FW.vial(o,()=>mistake('幼蟲辨識',`${o.name}：在玻璃瓶中把${sp}幼蟲認成${other}。`),()=>{tally('幼蟲辨識',1);
+        FW.clear(o,why=>mistake('清除孳生源',`${o.name}：${why}。`),()=>{tally('清除孳生源',1);
           $('pn').classList.remove('game');
           $('fw').innerHTML=`<div class="fb good" style="margin-top:10px">已採樣、鑑定為${sp}幼蟲，並${(o.clear||'pour')==='pour'?'清除積水':'投藥'}。</div>`;actions(true);});}));
     }else{$('pn').innerHTML=h+'<div id="act"></div>';actions();}
@@ -286,10 +287,10 @@ function inspectItem(id){
       $('acts').querySelectorAll('button').forEach(b=>b.onclick=()=>{
         const a=o.acts[+b.dataset.k];
         if(a.ok){$('acts').querySelectorAll('button').forEach(x=>x.disabled=true);b.classList.add('right');
-          S.treated[id]=true;const it=G.items[id];if(it&&it.swarm){G.scene.remove(it.swarm);it.swarm=null;}
+          S.treated[id]=true;tally('處置',1);const it=G.items[id];if(it&&it.swarm){G.scene.remove(it.swarm);it.swarm=null;}
           $('afb').innerHTML=`<div class="fb good">${a.fb}</div><p class="mut">${o.learn}</p><div class="row"><button class="pri" id="cl2">記錄，繼續調查</button></div>`;
           $('cl2').onclick=()=>{closePanel();setObj();};$('cl2').scrollIntoView({block:'nearest'});
-        }else{ if(first)mistake('處置',`${o.name}：選了「${a.t}」　→ ${a.fb}`);first=false;b.disabled=true;b.classList.add('wrong');
+        }else{ mistake('處置',`${o.name}：選了「${a.t}」　→ ${a.fb}`);first=false;b.disabled=true;b.classList.add('wrong');
           $('afb').innerHTML=`<div class="fb bad">${a.fb} 再選一次。</div>`;}
       });
     }
@@ -304,19 +305,28 @@ function counts(ids){
 }
 const r1=v=>Math.round(v*10)/10;
 function report(){
-  const S=G.S,ids=Object.keys(S.log).sort(),P=counts(ids);
-  const rows=ids.map(i=>{const o=L.ITEMS[i];return`<tr><td>${L.SITES[o.site].name}</td><td>${o.name}</td><td>${o.water?'有':'無'}</td><td>${o.larvae?(o.larvae==='aedes'?'斑蚊':'家蚊')+(o.pupae?'（含蛹）':''):'—'}</td></tr>`;}).join('');
-  openPanel(`<div class="who">無線電・學長</div><div class="say">回來了？把數字報給我。照你自己的紀錄算。</div>
-   <table><tr><th>地點</th><th>容器</th><th>積水</th><th>幼蟲</th></tr>${rows||'<tr><td colspan="4">沒有任何紀錄</td></tr>'}</table>
-   <p class="mut">調查 ${P.n} 戶${L.reportNote?'（'+L.reportNote+'）':''}。住宅指數＝斑蚊陽性戶數÷調查戶數×100%。容器指數＝斑蚊陽性容器數÷積水容器數×100%。布氏指數＝斑蚊陽性容器數÷調查戶數×100（不是百分比）。乾的容器不算積水容器；家蚊不算陽性。</p>
-   <div class="fg"><label id="L-HI">住宅指數（%）<input id="f-HI" type="number" step="0.1" inputmode="decimal"></label><label id="L-CI">容器指數（%）<input id="f-CI" type="number" step="0.1" inputmode="decimal"></label><label id="L-BI">布氏指數<input id="f-BI" type="number" step="0.1" inputmode="decimal"></label></div>
-   <div id="ffb"></div><div class="row"><button class="pri" id="bc">回報</button><button id="bk">還沒查完，回去繼續</button><button id="be" style="display:none" class="pri">結束調查</button></div>`);
-  $('bk').onclick=closePanel;
-  $('bc').onclick=()=>{let ok=0;['HI','CI','BI'].forEach(k=>{const v=parseFloat($('f-'+k).value),good=!isNaN(v)&&Math.abs(v-P[k])<=.6;$('L-'+k).className=good?'ok':'no';if(good)ok++;});
-    if(!S.formDone){S.formDone=true;S.formOK=ok;if(ok<3)mistake('指數計算',`第一次回報時，3 個指數對了 ${ok} 個。`);}
-    $('ffb').innerHTML=ok===3?`<div class="fb good">學長：「收到。」</div>`:`<div class="fb bad">學長：「不對，再算一次。」照你的紀錄：住宅指數 ${r1(P.HI)}%、容器指數 ${r1(P.CI)}%、布氏指數 ${r1(P.BI)}。</div>`;
-    $('be').style.display='';$('bk').style.display='none';};
-  $('be').onclick=ending;
+  const S=G.S,n=Object.keys(S.log).length,t=Object.keys(S.treated).length;
+  openPanel(`<div class="who">學長</div><div class="say">回來了？三層都看完了嗎？看完的話就回報，我來整理數字。</div>
+   <p class="mut">你目前檢查了 ${n} 處容器，處理完成 ${t} 處。回報之後調查就結束，不能再回去補查。</p>
+   <div class="row"><button class="pri" id="be">回報，完成任務</button><button id="bk">還沒查完，回去繼續</button></div>`);
+  $('bk').onclick=closePanel;$('be').onclick=ending;
+}
+function grade(S,P,T){
+  const I=L.ITEMS,ids=Object.keys(I),pos=ids.filter(i=>I[i].larvae==='aedes'),wat=ids.filter(i=>I[i].water);
+  const fp=pos.filter(i=>S.log[i]).length,fw=wat.filter(i=>S.log[i]).length,logged=Object.keys(S.log).length,tr=Object.keys(S.treated).length;
+  const tasks=L.scoreTasks?L.scoreTasks(S):[],td=tasks.filter(x=>x.done).length;
+  let ok=0,bad=0;const cats=Object.entries(S.ans).map(([c,v])=>{ok+=v.ok;bad+=v.bad;return {c,ok:v.ok,bad:v.bad};});
+  const acc=ok+bad?ok/(ok+bad):0;
+  const part=[
+   {k:'找到斑蚊陽性容器',v:`${fp} / ${pos.length}`,s:pos.length?25*fp/pos.length:25,m:25},
+   {k:'找到積水容器',v:`${fw} / ${wat.length}`,s:wat.length?10*fw/wat.length:10,m:10},
+   ...(tasks.length?[{k:'住戶狀況處理',v:`${td} / ${tasks.length}`,s:5*td/tasks.length,m:5}]:[]),
+   {k:'檢查後完成處置',v:`${tr} / ${logged}`,s:logged?15*tr/logged:0,m:15},
+   {k:'答題正確率',v:`${ok+bad?Math.round(acc*100):0}%（${ok} 對 / ${bad} 錯）`,s:40*acc,m:40},
+   {k:'被叮咬',v:`${S.bites} 次`,s:Math.max(0,5-S.bites),m:5}];
+  const max=part.reduce((a,p)=>a+p.m,0),sc=Math.round(part.reduce((a,p)=>a+p.s,0)/max*100);
+  const g=sc>=95?'S':sc>=85?'A':sc>=75?'B':sc>=65?'C':sc>=50?'D':'E';
+  return {sc,g,part,cats,tasks};
 }
 function ending(){
   const S=G.S,ids=Object.keys(S.log),P=counts(ids),T=counts(Object.keys(L.ITEMS)),I=L.ITEMS;
@@ -324,9 +334,15 @@ function ending(){
   const untreated=ids.filter(i=>!S.treated[i]);
   const cats={};S.mistakes.forEach(m=>(cats[m.cat]=cats[m.cat]||[]).push(m.text));
   const verdict=mp.length===0&&S.mistakes.length<=2?'這裡今晚乾淨了。':mp.length===0?'孳生源都找到了，但過程還有要修正的地方。':`你漏掉了 ${mp.length} 個斑蚊陽性容器。那裡的幼蟲，大約一週內會變成蚊子。`;
-  openPanel(`<div class="step">REC 停止</div><h2>調查結束</h2><p class="say">${verdict}</p>
-   <table><tr><th></th><th>你的回報</th><th>實際</th></tr>
-   <tr><td>斑蚊陽性戶數</td><td>${P.ph}</td><td>${T.ph}</td></tr><tr><td>積水容器數</td><td>${P.water}</td><td>${T.water}</td></tr><tr><td>斑蚊陽性容器數</td><td>${P.pos}</td><td>${T.pos}</td></tr>
+  const GR=grade(S,P,T),gc={S:'#e8c860',A:'#9ad09a',B:'#9ac0e0',C:'#d8d0b8',D:'#e0a070',E:'#e07a6a'}[GR.g];
+  openPanel(`<div class="step">REC 停止</div><h2>調查結束</h2>
+   <div style="display:flex;align-items:center;gap:18px;margin:6px 0 10px"><div style="font-size:64px;font-weight:700;line-height:1;color:${gc};font-family:monospace">${GR.g}</div><div><div style="font-size:22px">${GR.sc} 分</div><p class="say" style="margin:4px 0 0">${verdict}</p></div></div>
+   <table><tr><th>評分項目</th><th>結果</th><th>得分</th></tr>${GR.part.map(p=>`<tr><td>${p.k}</td><td>${p.v}</td><td>${Math.round(p.s*10)/10} / ${p.m}</td></tr>`).join('')}</table>
+   <p class="mut">等級：S ≥ 95、A ≥ 85、B ≥ 75、C ≥ 65、D ≥ 50、E < 50。每選錯一次就記一次錯誤；同一個錯誤選項重複選，只算一次。</p>
+   ${GR.cats.length?`<h3>各類題目</h3><table><tr><th>類別</th><th>答對</th><th>答錯</th><th>錯誤率</th></tr>${GR.cats.map(c=>`<tr><td>${c.c}</td><td>${c.ok}</td><td>${c.bad}</td><td>${c.ok+c.bad?Math.round(c.bad/(c.ok+c.bad)*100):0}%</td></tr>`).join('')}</table>`:''}
+   <h3>調查數字（依你的紀錄自動計算）</h3>
+   <table><tr><th></th><th>你的紀錄</th><th>實際</th></tr>
+   <tr><td>調查戶數</td><td>${P.n}</td><td>${T.n}</td></tr><tr><td>斑蚊陽性戶數</td><td>${P.ph}</td><td>${T.ph}</td></tr><tr><td>積水容器數</td><td>${P.water}</td><td>${T.water}</td></tr><tr><td>斑蚊陽性容器數</td><td>${P.pos}</td><td>${T.pos}</td></tr>
    <tr><td>住宅指數</td><td>${r1(P.HI)}%</td><td>${r1(T.HI)}%</td></tr><tr><td>容器指數</td><td>${r1(P.CI)}%</td><td>${r1(T.CI)}%</td></tr><tr><td>布氏指數</td><td>${r1(P.BI)}</td><td>${r1(T.BI)}</td></tr></table>
    ${L.extraEnding?L.extraEnding(S):''}
    <h3>漏掉的地方</h3>${missed.length?`<ul>${missed.map(i=>`<li><b>${L.SITES[I[i].site].name}・${I[i].name}</b>：${I[i].result}${I[i].larvae==='aedes'?' <b style="color:#e0a9a2">（斑蚊陽性）</b>':''}</li>`).join('')}</ul><p class="mut">漏掉陽性容器，指數會被低估，上面的人會以為這裡沒事。</p>`:'<p>全部找到了。</p>'}
