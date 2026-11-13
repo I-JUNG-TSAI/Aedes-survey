@@ -37,6 +37,10 @@ const ITEMS={
   resP:'桶底積著一層泥水。撈了一下，有幼蟲。',resN:'桶底積著一層泥水。撈了幾次，沒有幼蟲。',
   learn:'半埋在土裡的容器不容易被注意到，也倒不乾淨，要整個挖出來。',
   acts:[{t:'把周圍的草拔掉，讓太陽曬得到',fb:'曬不乾。桶子還在，雨後一樣積水。'},{t:'用旁邊的土把桶子整個埋起來',fb:'很難埋得密實，雨後土會下陷，又形成積水。'},{t:'挖出來倒掉並清運，凹洞用土填平',ok:1,fb:'把容器移走，並處理留下來的凹洞。'}]},
+ T1:{site:'W',label:'紅色水桶',name:'廁所的紅色水桶',desc:'廁所角落一個紅色水桶，裡面裝著水，上面漂著一支水瓢。',water:1,larvae:'aedes',
+  resP:'水桶裡的水很久沒動過，桶壁水線上方有一圈黑點。撈了一下，有幼蟲。',resN:'水桶裡的水是清的，看得出來常在用。撈了幾次，沒有幼蟲。',
+  learn:'廁所裡備用的水桶常常一放就是好幾天。水線上方的黑點可能是斑蚊卵。',
+  acts:[{t:'倒掉刷洗桶壁，之後加蓋，每週用完再接',ok:1,fb:'有使用需求的儲水容器：倒掉刷洗去卵，之後加蓋、定期用完。'},{t:'往桶裡投藥，水繼續留著沖廁所',fb:'可以倒掉刷洗的容器不靠投藥。'},{t:'把水桶收走，不准再放水',fb:'他需要用水。收走只會換成另一個沒人管的容器。'}]},
  D1:{site:'D',label:'黃色水桶',name:'空屋裡的黃色水桶',desc:'空屋房間地上的黃色水桶。屋頂的鐵皮破了，雨水滴得進來。',water:1,larvae:'aedes',
   resP:'桶裡有小半桶水。手電筒一照，水裡有幼蟲。',resN:'桶裡有小半桶水。手電筒照了一圈，沒有幼蟲。',
   learn:'沒有人住的空屋，容器沒有人倒，是社區裡最容易被忽略的孳生源。',
@@ -56,7 +60,7 @@ const ITEMS={
   learn:'沒在使用的大型容器要倒扣或加蓋，否則每一場雨都會積水。',
   acts:[{t:'倒掉刷洗後倒扣，請里長聯絡屋主',ok:1,fb:'清除、倒扣，並把空屋的問題交給里長和屋主。'},{t:'桶子太大不好倒，記錄後留在原地',fb:'記錄不等於處理。積水還在，孳生源就還在。'},{t:'找一塊木板，蓋在桶口上面',fb:'木板蓋不密，蚊子還是進得去，而且沒有人會維護。'}]}
 };
-const CAND=['W1','W2','W5','W6','Y1','Y2','Y3','D1','D3','D5'],NPOS=6;
+const CAND=['W1','W2','W5','W6','T1','Y1','Y2','Y3','D1','D3','D5'],NPOS=6;
 function shuffle(){const ids=CAND.slice();for(let i=ids.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[ids[i],ids[j]]=[ids[j],ids[i]];}
   ids.forEach((id,k)=>{const o=ITEMS[id],pos=k<NPOS;o.larvae=pos?'aedes':null;o.result=pos?o.resP:o.resN;});}
 
@@ -205,25 +209,52 @@ function build(K){
    [-6,-1].forEach(x=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.14,.2,16),ph(0xc86a2a));b.position.set(x,4.6,-11);g.add(b);});
    [[-4,-6],[-4,-14]].forEach(q=>{const s=new THREE.Mesh(new THREE.ConeGeometry(.28,.3,10,1,true),ph(0x2a3a34,{side:THREE.DoubleSide}));s.position.set(q[0],4.3,q[1]);g.add(s);const w=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,1.2,4),MT.dark);w.position.set(q[0],5,q[1]);g.add(w);});
    scene.add(Pr.flatten(g));light(0xc8b890,.55,11,-4,3.9,-6);const l2=light(0xc8b890,.4,10,-4,3.9,-14);anim.push(t=>{l2.intensity=(Math.sin(t*23)+Math.sin(t*3.7))>1.2?.05:.4;});}
-  // 灰色隔間牆與小房門
-  wX(3,-16,-2.15,0,3.3,MT.panel);wZ(-16,3.15,8.85,0,3.3,MT.panel);
-  [-6.2,-11.2].forEach(z=>{box(.06,2,.85,2.82,1,z,MT.woodL,nb);box(.05,.05,.05,2.76,1,z+.3,MT.steel,nb);});
-  {const g=G2();for(let i=0;i<5;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.9+R()*.6,.4+R()*.5,.6+R()*.5),ph(0xd8d6d0));b.position.set(4+R()*4,3.5+R()*.2,-4-R()*10);b.rotation.y=R();g.add(b);}scene.add(Pr.flatten(g));}
+  // 灰色隔間牆、小房門、廁所
+  wX(3,-16,-2.15,0,3.3,MT.panel,[[-11.68,-10.78]],2.05);wZ(-16,3.15,8.85,0,3.3,MT.panel);
+  box(.06,2,.85,2.82,1,-6.2,MT.woodL,nb);mesh(new THREE.SphereGeometry(.03,6,5),MT.steel,2.77,1,-5.9);
+  {const fr=ph(0x8a6a44);box(.12,2.1,.06,2.9,1.05,-11.71,fr,nb);box(.12,2.1,.06,2.9,1.05,-10.75,fr,nb);box(.12,.08,1.02,2.9,2.08,-11.23,fr,nb);
+   const dr=G2();const leaf=new THREE.Mesh(new THREE.BoxGeometry(.85,2,.04),MT.woodL);leaf.position.set(.43,1,0);dr.add(leaf);const kn=new THREE.Mesh(new THREE.SphereGeometry(.03,6,5),MT.steel);kn.position.set(.78,1,.04);dr.add(kn);
+   put(dr,3.05,0,-11.66,-1.25);
+   const sl=ph(0x3a6aa8);[[-0.12],[0.12]].forEach(q=>{const s=new THREE.Mesh(new THREE.BoxGeometry(.26,.03,.11),sl);s.position.set(2.45,.015,-11.2+q[0]);s.rotation.y=.2+q[0];scene.add(s);});}
+  {const tw=P(tex((g,n)=>{g.fillStyle='#c8c8c0';g.fillRect(0,0,n,n);for(let y=0;y<n;y+=8)for(let x=0;x<n;x+=8){const k=200+(R()*18|0);g.fillStyle=`rgb(${k},${k},${k-6})`;g.fillRect(x+1,y+1,7,7);}g.fillStyle='rgba(70,60,40,.25)';for(let i=0;i<14;i++)g.fillRect(R()*n,n*.6+R()*n*.4,2+R()*8,2+R()*10);}),{shininess:60,specular:0x444444},.8);
+   const tf=P(tex((g,n)=>{g.fillStyle='#6a6a64';g.fillRect(0,0,n,n);for(let y=0;y<n;y+=16)for(let x=0;x<n;x+=16){const k=150+(R()*20|0);g.fillStyle=`rgb(${k},${k-4},${k-12})`;g.fillRect(x+1,y+1,15,15);}g.fillStyle='rgba(30,26,20,.3)';for(let i=0;i<10;i++){g.beginPath();g.arc(R()*n,R()*n,2+R()*8,0,7);g.fill();}}),{shininess:40},.8);
+   wZ(-9.3,3.15,5.8,0,3.3,tw);wZ(-13.1,3.15,5.8,0,3.3,tw);wX(5.8,-13.1,-9.3,0,3.3,tw);
+   box(2.6,.02,3.7,4.5,.012,-11.2,tf,nb);
+   const por=ph(0xeceae2,{shininess:90,specular:0x888888});
+   const tl=G2();tl.add(new THREE.Mesh(new THREE.LatheGeometry([V(.001,0),V(.12,0),V(.14,.15),V(.2,.36),V(.21,.4),V(.16,.4),V(.12,.3),V(.001,.28)],18),por));tl.children[0].scale.z=1.25;
+   const ws=new THREE.Mesh(new THREE.CircleGeometry(.11,12),new THREE.MeshPhongMaterial({color:0xb0c4c0,shininess:90,transparent:true,opacity:.8}));ws.rotation.x=-PI/2;ws.position.y=.31;ws.scale.y=1.3;tl.add(ws);
+   const seat=new THREE.Mesh(new THREE.TorusGeometry(.17,.03,6,18),ph(0xf0eee8));seat.rotation.x=PI/2;seat.position.y=.41;seat.scale.y=1.25;tl.add(seat);
+   const tank=new THREE.Mesh(new THREE.BoxGeometry(.42,.38,.18),por);tank.position.set(0,.62,-.3);tl.add(tank);const btn=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.01,10),MT.steel);btn.position.set(0,.815,-.3);tl.add(btn);
+   tl.rotation.y=-PI/2;put(tl,5.3,0,-12.2);col.push({x0:4.8,x1:5.8,z0:-12.6,z1:-11.8,y0:0,y1:.9});
+   deco(tl,'查看：馬桶','坐式馬桶每天都在用，存水彎的水會一直更換。很少使用的馬桶，水封裡的水放久了也可能長孑孓。');
+   const sk=G2();const bs=new THREE.Mesh(new THREE.LatheGeometry([V(.001,0),V(.08,0),V(.2,.12),V(.22,.14),V(.2,.14)],16),por);bs.material=por.clone();bs.material.side=THREE.DoubleSide;bs.scale.z=.7;bs.position.y=.72;sk.add(bs);
+   const ped=new THREE.Mesh(new THREE.CylinderGeometry(.07,.1,.72,10),por);ped.position.y=.36;sk.add(ped);const tap=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.14,6),MT.steel);tap.rotation.x=.9;tap.position.set(0,.92,-.12);sk.add(tap);
+   const mir=new THREE.Mesh(new THREE.PlaneGeometry(.4,.55),new THREE.MeshPhongMaterial({color:0x8a9aa0,shininess:120,specular:0xffffff}));mir.position.set(0,1.5,-.15);sk.add(mir);const mf=new THREE.Mesh(new THREE.BoxGeometry(.44,.59,.01),ph(0x8a6a44));mf.position.set(0,1.5,-.16);sk.add(mf);
+   const cup=new THREE.Mesh(new THREE.CylinderGeometry(.03,.025,.09,8),ph(0x5aa0d0));cup.position.set(.14,.89,-.05);sk.add(cup);[0,1].forEach(i=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.01,.16,.015),ph([0xd84a3a,0x3a8ad8][i]));b.position.set(.13+i*.015,.97,-.05);b.rotation.z=.15-i*.3;sk.add(b);});
+   sk.rotation.y=-PI/2;put(sk,5.55,0,-10.1);col.push({x0:5.2,x1:5.8,z0:-10.4,z1:-9.8,y0:0,y1:1});
+   const rl=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.1,10),ph(0xf4f2ec));rl.rotation.x=PI/2;rl.position.set(5.68,.75,-11.6);scene.add(rl);
+   const tc=G2();tc.add(new THREE.Mesh(new THREE.CylinderGeometry(.13,.11,.3,10,1,true),ph(0x9ab0c8,{side:THREE.DoubleSide})));tc.children[0].position.y=.15;const bg=new THREE.Mesh(new THREE.CylinderGeometry(.14,.13,.06,10,1,true),new THREE.MeshPhongMaterial({color:0xe8e8e0,transparent:true,opacity:.7,side:THREE.DoubleSide}));bg.position.y=.29;tc.add(bg);put(tc,3.5,0,-12.8);
+   const mop=G2();const mh=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,1.3,5),MT.woodL);mh.position.y=.75;mop.add(mh);for(let i=0;i<10;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.02,.22,.02),ph(0xb8b0a0));s.position.set((R()-.5)*.12,.1,(R()-.5)*.12);s.rotation.z=(R()-.5)*.6;mop.add(s);}mop.rotation.z=.15;put(mop,3.4,0,-9.55);
+   const lb=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),new THREE.MeshBasicMaterial({color:0xfff2c8}));lb.position.set(4.5,3.0,-11.2);scene.add(lb);const tlL=light(0xf0e0b0,.6,5,4.5,2.8,-11.2);anim.push(t=>{tlL.intensity=(Math.sin(t*17)+Math.sin(t*2.9))>1.4?.08:.6;});
+   const tb=G2();const b=pail(0xc83a2a,.19,.24,.42,.8);tb.add(b);const sc=new THREE.Mesh(new THREE.LatheGeometry([V(.001,0),V(.07,0),V(.09,.08),V(.095,.09)],12),ph(0x3a8ad8,{side:THREE.DoubleSide}));sc.position.set(.05,.32,.05);sc.rotation.z=.4;tb.add(sc);
+   addItem('T1',tb,3.6,0,-10.0,.25);}
+  {const g=G2(),ct=P(tex((g,n)=>{g.fillStyle='#a8865a';g.fillRect(0,0,n,n);for(let i=0;i<400;i++){g.fillStyle=R()<.5?'rgba(80,60,30,.25)':'rgba(220,190,140,.2)';g.fillRect(R()*n,R()*n,1,1);}g.fillStyle='rgba(200,180,140,.7)';g.fillRect(0,n*.45,n,n*.1);g.fillStyle='rgba(40,30,20,.6)';g.font='bold 9px sans-serif';g.fillText('易碎',4,14);}),{},1);
+   for(let i=0;i<6;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.6+R()*.3,.35+R()*.2,.45+R()*.2),ct);b.position.set(3.6+R()*4.6,3.48+b.geometry.parameters.height/2,-3.5-R()*11);b.rotation.y=R()*.6;g.add(b);}scene.add(Pr.flatten(g));}
   // 沿牆堆疊的木箱和收藏
   {const g=G2();let z=-3.4;const tops=[];for(let i=0;i<9;i++){const w=.7+R()*.5,d=.55+R()*.2;let y=0;const n=1+(R()*3|0);for(let k=0;k<n;k++){const h=.32+R()*.3,b=new THREE.Mesh(new THREE.BoxGeometry(d,h,w),R()<.5?MT.woodD:MT.woodL);b.position.set(2.82-d/2-.08-(k?R()*.06:0),y+h/2,z-w/2);g.add(b);
        if(R()<.6){const hd=new THREE.Mesh(new THREE.BoxGeometry(.02,.03,.12),MT.dark);hd.position.set(2.82-d-.09,y+h*.5,z-w/2);g.add(hd);}y+=h;}tops.push([2.82-d/2-.08,y,z-w/2]);z-=w+.04;}
    for(let i=0;i<5;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.5+R()*.3,.3+R()*.2,.6+R()*.4),R()<.5?MT.woodD:MT.woodL);b.position.set(1.5+R()*.3,b.geometry.parameters.height/2,-4-i*2.1);b.rotation.y=(R()-.5)*.4;g.add(b);}
    tops.forEach((t,i)=>{if(i===4)return;if(i%3===0){const f=new THREE.Mesh(new THREE.BoxGeometry(.04,.5,.6),MT.dark);f.position.set(t[0]+.2,t[1]+.25,t[2]);f.rotation.z=-.15;g.add(f);const pic=new THREE.Mesh(new THREE.PlaneGeometry(.44,.34),ph(0xd8d4c8));pic.rotation.y=-PI/2;pic.position.set(t[0]+.17,t[1]+.25,t[2]);pic.rotation.z=.15;g.add(pic);}
-     else if(i%3===1){const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.14,0),ph(0x6a5a4a,{flatShading:true}));r.scale.y=.6;r.position.set(t[0],t[1]+.08,t[2]);g.add(r);}
-     else{const s=new THREE.Mesh(new THREE.ConeGeometry(.09,.2,8),ph(0xd8b8a8));s.rotation.z=PI/2;s.position.set(t[0],t[1]+.08,t[2]);g.add(s);}});
+     else if(i%3===1){[0xa83a2a,0x2a4a7a,0x5a6a3a,0xd8c8a0].forEach((c,k)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.2,.035,.28),ph(c));b.position.set(t[0],t[1]+.018+k*.036,t[2]);b.rotation.y=(R()-.5)*.3;g.add(b);});}
+     else{const tp=new THREE.Mesh(new THREE.LatheGeometry([V(.001,0),V(.06,0),V(.085,.05),V(.08,.1),V(.045,.13),V(.05,.14),V(.001,.15)],14),ph(0x3a6a5a,{shininess:70}));tp.position.set(t[0],t[1],t[2]);g.add(tp);const sp=new THREE.Mesh(new THREE.CylinderGeometry(.01,.016,.1,6),ph(0x3a6a5a));sp.rotation.x=.9;sp.position.set(t[0],t[1]+.08,t[2]+.1);g.add(sp);}});
    scene.add(Pr.flatten(g));col.push({x0:1.2,x1:2.85,z0:-14.6,z1:-3.2,y0:0,y1:1.4});
    const t=tops[4],jg=G2(),clay=ph(0x5a4234,{shininess:30});[[0,0,1],[.05,-.3,.75]].forEach(q=>{const j=new THREE.Mesh(new THREE.LatheGeometry([V(.001,0),V(.07,0),V(.15,.1),V(.16,.2),V(.1,.3),V(.06,.34),V(.075,.37),V(.055,.37),V(.05,.33)],14),clay);j.scale.setScalar(q[2]);j.position.set(q[0],0,q[1]);jg.add(j);});
    addItem('W4',jg,t[0],t[1],t[2],0);}
   // 靠牆的畫布、畫架、洗筆桶
-  {const g=G2();[[-8.55,-6,2.2,1.6,.2],[-8.5,-6.6,1.8,1.4,.16],[-8.45,-8.4,2.4,1.9,.22],[-8.5,-15,1.5,1.2,.18]].forEach((q,i)=>{const c=new THREE.Mesh(new THREE.BoxGeometry(.05,q[3],q[2]),i%2?ph(0xd8d2c0):MT.woodL);c.position.set(q[0]+q[4]*q[3]*.5,q[3]/2,q[1]);c.rotation.z=-q[4];g.add(c);});
+  {const g=G2();[[-8.55,-7.2,2.2,1.6,.2],[-8.5,-7.8,1.8,1.4,.16],[-8.45,-9.6,2.4,1.9,.22],[-8.5,-15,1.5,1.2,.18]].forEach((q,i)=>{const c=new THREE.Mesh(new THREE.BoxGeometry(.05,q[3],q[2]),i%2?ph(0xd8d2c0):MT.woodL);c.position.set(q[0]+q[4]*q[3]*.5,q[3]/2,q[1]);c.rotation.z=-q[4];g.add(c);});
    const ez=G2();[[-.3,0,.1],[.3,0,.1],[0,-.5,-.14]].forEach(q=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.04,1.9,.04),MT.woodL);l.position.set(q[0],.95,q[1]);l.rotation.x=q[2];ez.add(l);});
    const cv=new THREE.Mesh(new THREE.BoxGeometry(.9,1.1,.03),new THREE.MeshPhongMaterial({map:tex((g,n)=>{g.fillStyle='#2a2622';g.fillRect(0,0,n,n);for(let i=0;i<30;i++){g.fillStyle=['#6a1a14','#1a1a1c','#8a7a5a','#3a2a4a'][R()*4|0];g.fillRect(R()*n,R()*n,R()*30,R()*40);}g.fillStyle='#0a0a0a';g.beginPath();g.ellipse(n*.5,n*.4,n*.1,n*.14,0,0,7);g.fill();g.fillRect(n*.42,n*.5,n*.16,n*.4);})}));cv.position.set(0,1.25,.08);cv.rotation.x=-.1;ez.add(cv);
-   ez.position.set(-6.6,0,-12);ez.rotation.y=.9;g.add(ez);scene.add(g);col.push({x0:-8.85,x1:-8.1,z0:-9.8,z1:-5.2,y0:0,y1:2});col.push({x0:-7,x1:-6.2,z0:-12.4,z1:-11.6,y0:0,y1:1.8});
+   ez.position.set(-6.6,0,-12);ez.rotation.y=.9;g.add(ez);scene.add(g);col.push({x0:-8.85,x1:-8.1,z0:-11,z1:-6,y0:0,y1:2});col.push({x0:-7,x1:-6.2,z0:-12.4,z1:-11.6,y0:0,y1:1.8});
    const pb=Pr.C.paintCan({water:new THREE.MeshPhongMaterial({color:0x5a4a6a,shininess:60}),level:.6});const br=G2();br.add(pb);[0,1,2].forEach(i=>{const b=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.42,5),MT.woodL);b.position.set(-.05+i*.05,.3,.02*i);b.rotation.z=.25-i*.2;br.add(b);});
    addItem('W3',br,-5.9,0,-12.6,.2);}
   // 鷹架、蓋著布的大件作品、保麗龍、椅子
@@ -232,18 +263,91 @@ function build(K){
    const pf=new THREE.Mesh(new THREE.BoxGeometry(1.2,.04,1.2),MT.woodD);pf.position.y=3.42;g.add(pf);put(g,-5.6,0,-5.2);scene.remove(g);scene.add(Pr.flatten(g));col.push({x0:-6.3,x1:-4.9,z0:-5.9,z1:-4.5,y0:0,y1:4});}
   {const g=G2();const sh=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),new THREE.MeshPhongMaterial({color:0x3a4a5a,shininess:50,flatShading:true}));const p=sh.geometry.attributes.position;for(let i=0;i<p.count;i++){const y=p.getY(i);p.setXYZ(i,p.getX(i)*(1+Math.sin(i*1.7)*.15)*(y<0?1.15:1),y<-.2?-.2:y*1.5+Math.sin(i)*.06,p.getZ(i)*(1+Math.cos(i*2.3)*.15)*(y<0?1.15:1));}sh.geometry.computeVertexNormals();sh.position.y=.25;sh.scale.set(1.1,1.3,.9);g.add(sh);
    put(g,-2.2,0,-9.5);col.push({x0:-3.3,x1:-1.1,z0:-10.4,z1:-8.6,y0:0,y1:2});deco(g,'查看：蓋著布的作品','用帆布蓋起來的大件作品，看不出底下是什麼形狀。布是乾的。');
-   const st=G2();[[-3.6,.4,-15.5,1.2,.8,.7],[-2.6,.3,-16.2,.9,.6,1],[-3.2,1.05,-15.7,.7,.5,.6]].forEach(q=>{const b=new THREE.Mesh(new THREE.BoxGeometry(q[3],q[4],q[5]),ph(0xe8e8e4));b.position.set(q[0],q[1],q[2]);b.rotation.y=R()*.5;st.add(b);});scene.add(st);col.push({x0:-4.3,x1:-2,z0:-16.8,z1:-15,y0:0,y1:1.2});}
-  // 飲水機 W1
-  {const g=G2();const b=new THREE.Mesh(new THREE.BoxGeometry(.38,1.25,.36),MT.steel);b.position.y=.625;g.add(b);const n=new THREE.Mesh(new THREE.BoxGeometry(.3,.3,.06),MT.dark);n.position.set(0,.78,.16);g.add(n);
-   const tr=new THREE.Mesh(new THREE.BoxGeometry(.28,.05,.16),ph(0x1a1a1c,{shininess:60}));tr.position.set(0,.63,.24);g.add(tr);const wt=new THREE.Mesh(new THREE.PlaneGeometry(.24,.12),M.water);wt.rotation.x=-PI/2;wt.position.set(0,.657,.24);g.add(wt);
-   [[-.07,0xff7a2a],[.07,0x2a8aff]].forEach(q=>{const d=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,.01),new THREE.MeshBasicMaterial({color:q[1]}));d.position.set(q[0],1.02,.185);g.add(d);});
-   const bt=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.34,12),new THREE.MeshPhongMaterial({color:0x9ac0e0,transparent:true,opacity:.5,shininess:90}));bt.position.y=1.42;g.add(bt);
-   g.rotation.y=PI/2;addItem('W1',g,-8.55,0,-3.6,.3);}
-  // 工作桌、焊接工具
+   const styro=P(tex((q,n)=>{q.fillStyle='#ecece6';q.fillRect(0,0,n,n);for(let i=0;i<500;i++){q.fillStyle=R()<.5?'rgba(180,180,170,.5)':'rgba(255,255,255,.6)';q.beginPath();q.arc(R()*n,R()*n,1+R()*1.5,0,7);q.fill();}}),{},.6);
+   const st=G2();[[-3.6,.4,-15.5,1.2,.8,.7],[-2.6,.3,-16.2,.9,.6,1],[-3.2,1.05,-15.7,.7,.5,.6]].forEach(q=>{const b=new THREE.Mesh(new THREE.BoxGeometry(q[3],q[4],q[5]),styro);b.position.set(q[0],q[1],q[2]);b.rotation.y=R()*.5;st.add(b);});scene.add(st);deco(st,'查看：保麗龍','一疊做作品剩下的保麗龍塊，上面有切割的痕跡。');col.push({x0:-4.3,x1:-2,z0:-16.8,z1:-15,y0:0,y1:1.2});}
+  // 飲水機 W1 與旁邊的生活角落（冰箱、小烤箱、木板桌）
+  {const ss=ph(0x8a8e90,{shininess:70,specular:0x777777}),blk=ph(0x18181a,{shininess:50,specular:0x333333}),wh=ph(0xe8e6de,{shininess:30});
+   const fr=G2();const fb=new THREE.Mesh(new THREE.BoxGeometry(.66,1.75,.62),ss);fb.position.y=.875;fr.add(fb);const gp=new THREE.Mesh(new THREE.BoxGeometry(.67,.01,.63),blk);gp.position.y=1.12;fr.add(gp);
+   [[1.4],[.6]].forEach(q=>{const h=new THREE.Mesh(new THREE.BoxGeometry(.02,.25,.03),MT.dark);h.position.set(.3,q[0],.32);fr.add(h);});
+   [[.62,1.5,0x2a8ad8],[.62,1.0,0x3aa8c8]].forEach(q=>{const s=new THREE.Mesh(new THREE.PlaneGeometry(.06,.1),ph(q[2]));s.position.set(-.2,q[1],.312);fr.add(s);});
+   const ov=G2();const ob=new THREE.Mesh(new THREE.BoxGeometry(.42,.24,.3),ph(0xe8a8a8,{shininess:40}));ob.position.y=.14;ov.add(ob);const gl=new THREE.Mesh(new THREE.PlaneGeometry(.26,.15),blk);gl.position.set(-.04,.14,.151);ov.add(gl);
+   const oh=new THREE.Mesh(new THREE.BoxGeometry(.02,.15,.03),MT.steel);oh.position.set(-.2,.14,.17);ov.add(oh);[[.15,.19],[.15,.09]].forEach(q=>{const k=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.02,8),wh);k.rotation.x=PI/2;k.position.set(q[0],q[1],.155);ov.add(k);});
+   [[-.17,-.12],[.17,-.12],[-.17,.12],[.17,.12]].forEach(q=>{const f=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,.03),blk);f.position.set(q[0],.015,q[1]);ov.add(f);});
+   ov.position.y=1.75;ov.rotation.y=.1;fr.add(ov);fr.rotation.y=PI/2;put(fr,-8.5,0,-2.6);scene.remove(fr);scene.add(Pr.flatten(fr));fr.position.set(-8.5,0,-2.6);fr.rotation.y=PI/2;col.push({x0:-8.85,x1:-8.1,z0:-2.95,z1:-2.25,y0:0,y1:2});
+   deco(fr,'查看：冰箱','雙門冰箱，上面放著一台粉紅色的小烤箱。這台是新型的，底下沒有接除霜水的水盤。');
+   // 飲水機
+   const g=G2();const bd=new THREE.Mesh(new THREE.BoxGeometry(.34,1.05,.36),blk);bd.position.y=.525;g.add(bd);
+   const fp=new THREE.Mesh(new THREE.BoxGeometry(.3,.38,.02),ss);fp.position.set(0,.78,.18);g.add(fp);const rec=new THREE.Mesh(new THREE.BoxGeometry(.24,.2,.06),blk);rec.position.set(0,.66,.17);g.add(rec);
+   [[-.09,0xff4a2a],[-.03,0xffffff],[.03,0x2a8aff],[.09,0xffffff]].forEach(q=>{const d=new THREE.Mesh(new THREE.BoxGeometry(.035,.02,.01),new THREE.MeshBasicMaterial({color:q[1]}));d.position.set(q[0],1.0,.181);g.add(d);});
+   const dr=new THREE.Mesh(new THREE.BoxGeometry(.28,.05,.12),ph(0x2a2a2c,{shininess:60}));dr.position.set(0,.2,.2);g.add(dr);const gr=new THREE.Mesh(new THREE.PlaneGeometry(.24,.09),ph(0x0e0e10));gr.rotation.x=-PI/2;gr.position.set(0,.226,.2);g.add(gr);
+   const lw=new THREE.Mesh(new THREE.BoxGeometry(.3,.02,.2),ss);lw.position.set(0,.16,.17);g.add(lw);
+   const bo=new THREE.Mesh(new THREE.LatheGeometry([V(.03,-.06),V(.03,0),V(.06,.03),V(.14,.06),V(.145,.12),V(.14,.18),V(.145,.24),V(.14,.3),V(.145,.36),V(.12,.4),V(.06,.43),V(.001,.44)],16),new THREE.MeshPhongMaterial({color:0xc8dcec,transparent:true,opacity:.42,shininess:120,specular:0xffffff,depthWrite:false}));bo.position.y=1.06;g.add(bo);
+   const lab=new THREE.Mesh(new THREE.CylinderGeometry(.147,.147,.1,16,1,true),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.fillStyle='#d8d4a0';q.fillRect(0,0,n,n);q.fillStyle='#4a7a2a';q.fillRect(0,n*.2,n,n*.6);q.fillStyle='#e8e0c0';q.fillRect(n*.3,n*.35,n*.4,n*.3);}),side:THREE.DoubleSide}));lab.position.y=1.28;g.add(lab);
+   const wq=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.2,14),new THREE.MeshPhongMaterial({color:0x9ac0d8,transparent:true,opacity:.3,depthWrite:false}));wq.position.y=1.2;g.add(wq);
+   g.rotation.y=PI/2;addItem('W1',g,-8.6,0,-3.3,.25);
+   // 電暖器
+   const ht=G2();const hp=new THREE.Mesh(new THREE.BoxGeometry(.75,.48,.08),wh);hp.position.y=.34;ht.add(hp);const gri=new THREE.Mesh(new THREE.PlaneGeometry(.6,.1),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.fillStyle='#d8d6ce';q.fillRect(0,0,n,n);q.fillStyle='#6a6a68';for(let x=0;x<n;x+=4)q.fillRect(x,0,2,n);})}));gri.position.set(0,.5,.041);ht.add(gri);
+   [-.3,.3].forEach(x=>{const f=new THREE.Mesh(new THREE.BoxGeometry(.05,.1,.3),wh);f.position.set(x,.05,0);ht.add(f);});ht.rotation.set(-.08,PI/2+.35,0);put(ht,-8.15,0,-3.75);
+   // 木板桌（縫紉機鐵腳）
+   const tb=G2();const top=new THREE.Mesh(new THREE.BoxGeometry(.5,.07,1.55),MT.woodL);top.position.y=.88;tb.add(top);const edge=new THREE.Mesh(new THREE.BoxGeometry(.12,.07,1.55),MT.woodD);edge.position.set(.3,.88,0);edge.rotation.x=.04;tb.add(edge);
+   const iron=ph(0x1e1e20,{shininess:30});[-.62,.62].forEach(z=>{const l=new THREE.Mesh(new THREE.TorusGeometry(.26,.022,5,14,PI),iron);l.rotation.set(0,PI/2,PI);l.position.set(0,.6,z);tb.add(l);const ft=new THREE.Mesh(new THREE.BoxGeometry(.4,.04,.05),iron);ft.position.set(0,.02,z);tb.add(ft);const st=new THREE.Mesh(new THREE.BoxGeometry(.04,.85,.04),iron);st.position.set(0,.43,z);tb.add(st);});
+   const wheel=new THREE.Mesh(new THREE.TorusGeometry(.18,.02,5,16),iron);wheel.rotation.y=PI/2;wheel.position.set(-.05,.4,-.6);tb.add(wheel);
+   const pad=new THREE.Mesh(new THREE.BoxGeometry(.42,.01,.5),ph(0xd8c8a0));pad.position.set(0,.92,.35);tb.add(pad);
+   // 桌上：橘色籃子疊在白色架上、紙杯、蜂蜜罐、玻璃罐、遙控器、衛生紙
+   const rk=new THREE.Mesh(new THREE.BoxGeometry(.3,.22,.4),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.clearRect(0,0,n,n);q.fillStyle='#e8e4dc';q.fillRect(0,0,n,6);q.fillRect(0,n-6,n,6);q.fillRect(0,0,6,n);q.fillRect(n-6,0,6,n);for(let x=10;x<n-6;x+=10)q.fillRect(x,0,3,n);}),transparent:true,alphaTest:.4,side:THREE.DoubleSide}));rk.position.set(-.05,1.03,-.45);tb.add(rk);
+   const bk=new THREE.Mesh(new THREE.BoxGeometry(.32,.2,.42),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.clearRect(0,0,n,n);q.fillStyle='#e0702a';q.fillRect(0,0,n,8);q.fillRect(0,n-6,n,6);q.fillRect(0,0,5,n);q.fillRect(n-5,0,5,n);for(let y=12;y<n-6;y+=7)for(let x=8;x<n-6;x+=7)q.fillRect(x,y,4,3);}),transparent:true,alphaTest:.4,side:THREE.DoubleSide}));bk.position.set(-.05,1.25,-.45);tb.add(bk);
+   [[0xd8c8a0,.1,.12,-.52],[0xe8e0c8,.08,.15,-.4],[0x8a4a2a,.06,.1,-.32]].forEach(q=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.12,q[2],q[1]),ph(q[0]));b.position.set(-.05,1.22+q[2]/2,q[3]);tb.add(b);});
+   const tag=new THREE.Mesh(new THREE.PlaneGeometry(.12,.08),ph(0xf4f2ec,{side:THREE.DoubleSide}));tag.position.set(-.05,1.4,-.38);tb.add(tag);
+   for(let i=0;i<6;i++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.04,.03,.09,10,1,true),ph(0xf0ece4,{side:THREE.DoubleSide}));c.position.set(-.1,.96+i*.018,-.12);tb.add(c);}
+   const c2=new THREE.Mesh(new THREE.CylinderGeometry(.04,.03,.09,10,1,true),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.fillStyle='#f0ece4';q.fillRect(0,0,n,n);q.fillStyle='#c84a5a';for(let i=0;i<5;i++){q.beginPath();q.arc(R()*n,R()*n,3+R()*4,0,7);q.fill();}}),side:THREE.DoubleSide}));c2.rotation.z=PI/2-.2;c2.position.set(.02,1.03,-.02);tb.add(c2);
+   const jar=(x,z,h,r,body,cap)=>{const j=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,12),new THREE.MeshPhongMaterial({color:body,transparent:true,opacity:.85,shininess:90}));j.position.set(x,.92+h/2,z);tb.add(j);const c=new THREE.Mesh(new THREE.CylinderGeometry(r*.85,r*.85,.03,12),ph(cap));c.position.set(x,.935+h,z);tb.add(c);};
+   jar(-.1,-.75,.12,.045,0x7a3a10,0xc82a1a);jar(.02,.08,.12,.045,0x5a2a10,0xc82a1a);jar(.1,.2,.14,.06,0x8a7a3a,0x9a8a3a);
+   const tote=new THREE.Mesh(new THREE.BoxGeometry(.18,.13,.22),wh);tote.position.set(.05,.99,.15);tb.add(tote);
+   const rc=new THREE.Mesh(new THREE.BoxGeometry(.06,.02,.17),ph(0xe8e4d8));rc.position.set(.08,.935,.42);rc.rotation.y=.3;tb.add(rc);const rs=new THREE.Mesh(new THREE.PlaneGeometry(.035,.04),ph(0x8a9a8a));rs.rotation.x=-PI/2;rs.position.set(.08,.946,.39);tb.add(rs);
+   const ts=new THREE.Mesh(new THREE.IcosahedronGeometry(.05,0),ph(0xf8f6f0,{flatShading:true}));ts.scale.y=.5;ts.position.set(.1,.94,.55);tb.add(ts);
+   // 桌下：保溫瓶、籃子裡的礦泉水、紅色地墊
+   const fl=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.26,12),ph(0x9ad06a,{shininess:60}));fl.position.set(-.05,.13,-.35);tb.add(fl);const fc=new THREE.Mesh(new THREE.CylinderGeometry(.062,.062,.06,12),ph(0xe8e8e0));fc.position.set(-.05,.29,-.35);tb.add(fc);
+   const bsk=new THREE.Mesh(new THREE.BoxGeometry(.3,.16,.4),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.clearRect(0,0,n,n);q.fillStyle='#e8e8e0';q.fillRect(0,0,n,6);q.fillRect(0,n-5,n,5);q.fillRect(0,0,5,n);q.fillRect(n-5,0,5,n);for(let y=10;y<n-5;y+=8)for(let x=8;x<n-5;x+=8)q.fillRect(x,y,5,4);}),transparent:true,alphaTest:.4,side:THREE.DoubleSide}));bsk.position.set(-.02,.08,.15);tb.add(bsk);
+   [[.05,0x2a6ad8],[-.08,0xc8dce8]].forEach(q=>{const w=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.24,10),ph(q[1],{transparent:true,opacity:.75}));w.rotation.x=PI/2-.3;w.position.set(-.02,.14,.15+q[0]);tb.add(w);});
+   const mat=new THREE.Mesh(new THREE.CircleGeometry(.35,14),ph(0xa82a2a));mat.rotation.x=-PI/2;mat.position.set(.1,.006,.25);tb.add(mat);
+   put(tb,-8.55,0,-4.75);scene.remove(tb);scene.add(Pr.flatten(tb));tb.position.set(-8.55,0,-4.75);col.push({x0:-8.85,x1:-8.2,z0:-5.55,z1:-3.95,y0:0,y1:1.2});
+   deco(tb,'查看：木板桌','用舊縫紉機腳架和一塊原木板拼成的桌子。上面放著茶包、紙杯、蜂蜜和冷氣遙控器，是他泡茶吃飯的地方。');
+   // 牆上的插座
+   [[-3.75,1.25],[-3.75,.5]].forEach(q=>{const o=mesh(new THREE.BoxGeometry(.02,.12,.07),wh,-8.84,q[1],q[0]);mesh(new THREE.BoxGeometry(.02,.03,.04),MT.dark,-8.83,q[1],q[0]);});}
+  // 吃飯兼工作的鐵桌、焊接機、生活雜物
   {const g=G2();const t=new THREE.Mesh(new THREE.BoxGeometry(1.8,.06,.8),MT.steel);t.position.y=.85;g.add(t);[[-.8,-.3],[.8,-.3],[-.8,.3],[.8,.3]].forEach(q=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.05,.85,.05),MT.dark);l.position.set(q[0],.42,q[1]);g.add(l);});
-   const cyl=new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,1.2,10),ph(0x3a5a8a,{shininess:40}));cyl.position.set(1.2,.6,0);g.add(cyl);const hm=new THREE.Mesh(new THREE.BoxGeometry(.3,.26,.2),ph(0x2a2a2c));hm.position.set(-.4,1.0,0);g.add(hm);
-   put(g,-3.8,0,-3.2);col.push({x0:-4.8,x1:-2.4,z0:-3.7,z1:-2.7,y0:0,y1:1.2});}
-
+   const bowlM=new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.fillStyle='#f2f0e8';q.fillRect(0,0,n,n);q.fillStyle='#2a5aa8';q.fillRect(0,4,n,3);q.fillRect(0,n-12,n,2);for(let x=4;x<n;x+=12){q.beginPath();q.arc(x,n/2,3,0,7);q.fill();}}),shininess:80,specular:0x666666,side:THREE.DoubleSide});
+   const bowl=(x,z,s)=>{const b=new THREE.Mesh(new THREE.LatheGeometry([V(.001,0),V(.035,0),V(.04,.012),V(.07,.045),V(.075,.06)],16),bowlM);b.scale.setScalar(s||1);b.position.set(x,.88,z);g.add(b);const r=new THREE.Mesh(new THREE.CircleGeometry(.055*(s||1),12),ph(0xe8e0c8));r.rotation.x=-PI/2;r.position.set(x,.88+.035*(s||1),z);g.add(r);};
+   bowl(-.4,.05);bowl(-.15,.18,.8);
+   [[-.52,.2],[-.5,.22]].forEach(q=>{const c=new THREE.Mesh(new THREE.BoxGeometry(.006,.006,.23),ph(0xc8a060));c.position.set(q[0],.885,q[1]);c.rotation.y=.4;g.add(c);});
+   const tbx=new THREE.Mesh(new THREE.BoxGeometry(.24,.09,.12),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.fillStyle='#f4f0ea';q.fillRect(0,0,n,n);q.fillStyle='#e88aa8';for(let i=0;i<7;i++){q.beginPath();q.arc(R()*n,R()*n,4+R()*5,0,7);q.fill();}q.fillStyle='#6ab06a';for(let i=0;i<5;i++)q.fillRect(R()*n,R()*n,6,3);})}));tbx.position.set(.4,.925,-.2);g.add(tbx);
+   const tis=new THREE.Mesh(new THREE.ConeGeometry(.04,.08,4),ph(0xffffff,{flatShading:true}));tis.position.set(.4,1.0,-.2);g.add(tis);
+   const mug=new THREE.Mesh(new THREE.CylinderGeometry(.04,.038,.1,12),MT.steel);mug.position.set(.1,.93,.15);g.add(mug);const mh=new THREE.Mesh(new THREE.TorusGeometry(.025,.006,5,10,PI),MT.steel);mh.rotation.z=-PI/2;mh.position.set(.145,.93,.15);g.add(mh);
+   const pot=new THREE.Mesh(new THREE.LatheGeometry([V(.001,0),V(.06,0),V(.08,.05),V(.075,.1),V(.04,.12),V(.045,.13),V(.001,.14)],14),ph(0x5a3a2a,{shininess:50}));pot.position.set(.35,.88,.18);g.add(pot);const sp=new THREE.Mesh(new THREE.CylinderGeometry(.01,.015,.09,6),ph(0x5a3a2a));sp.rotation.z=-.9;sp.position.set(.44,.95,.18);g.add(sp);
+   const np=new THREE.Mesh(new THREE.PlaneGeometry(.38,.28),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.fillStyle='#d8d4c4';q.fillRect(0,0,n,n);q.fillStyle='#3a3a3a';q.fillRect(4,4,n-8,8);for(let y=16;y<n-4;y+=4)q.fillRect(4+(y%12?0:20),y,(y%12?n-8:n-28),1.5);q.fillStyle='#6a6a6a';q.fillRect(6,18,18,14);})}));np.rotation.set(-PI/2,0,.2);np.position.set(.6,.881,.12);g.add(np);
+   const ash=new THREE.Mesh(new THREE.CylinderGeometry(.06,.05,.03,10),ph(0x7a8a8a,{shininess:60}));ash.position.set(-.7,.895,-.25);g.add(ash);
+   const bag=new THREE.Mesh(new THREE.SphereGeometry(.1,7,5),new THREE.MeshPhongMaterial({color:0xe8e8e0,transparent:true,opacity:.75,flatShading:true}));bag.scale.set(1.1,.7,.9);bag.position.set(-.65,.93,.15);g.add(bag);
+   put(g,-3.8,0,-3.2);col.push({x0:-4.8,x1:-2.4,z0:-3.7,z1:-2.7,y0:0,y1:1.2});deco(g,'查看：鐵桌','桌上有吃剩的便當、兩個碗、一雙筷子、面紙盒和一份舊報紙。他在這裡吃飯，也在這裡畫草圖。');
+   // 紅色塑膠椅凳
+   [[-4.3,-2.4],[-3.1,-3.95]].forEach(q=>{const s=G2(),rm=ph(0xc83a2a);const tp=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.03,12),rm);tp.position.y=.45;s.add(tp);const lg=new THREE.Mesh(new THREE.CylinderGeometry(.14,.18,.44,8,1,true),rm.clone());lg.material.side=THREE.DoubleSide;lg.position.y=.22;s.add(lg);put(s,q[0],0,q[1]);});
+   // 焊接機和氣瓶（門口內側）
+   {const w=G2(),or=ph(0xd8701a,{shininess:40});const bd=new THREE.Mesh(new THREE.BoxGeometry(.5,.36,.28),or);bd.position.y=.18;w.add(bd);const fp=new THREE.Mesh(new THREE.PlaneGeometry(.3,.2),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.fillStyle='#2a2a2c';q.fillRect(0,0,n,n);q.fillStyle='#e8e8e0';q.font='bold 13px sans-serif';q.fillText('電焊機',6,18);q.fillStyle='#c8c8c0';q.beginPath();q.arc(20,44,10,0,7);q.fill();q.beginPath();q.arc(44,44,10,0,7);q.fill();q.fillStyle='#d82a1a';q.fillRect(28,30,8,4);})}));fp.position.set(-.14,.2,.141);w.add(fp);
+     const hd=new THREE.Mesh(new THREE.TorusGeometry(.12,.015,5,10,PI),MT.dark);hd.position.y=.36;w.add(hd);
+     const cb=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(-.2,.1,.15),new THREE.Vector3(-.3,0,.5),new THREE.Vector3(.2,0,.8),new THREE.Vector3(.5,.02,.6)]),16,.015,4),MT.dark);w.add(cb);
+     const cy=new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,1.2,12),ph(0x2a6a3a,{shininess:40}));cy.position.set(.45,.6,-.1);w.add(cy);const cv=new THREE.Mesh(new THREE.CylinderGeometry(.03,.04,.12,8),MT.steel);cv.position.set(.45,1.26,-.1);w.add(cv);
+     const mk=new THREE.Mesh(new THREE.BoxGeometry(.26,.3,.14),ph(0x1a1a1c));mk.position.set(-.05,.52,-.05);mk.rotation.x=-.3;w.add(mk);const mg=new THREE.Mesh(new THREE.PlaneGeometry(.12,.05),ph(0x3a5a2a,{shininess:120}));mg.position.set(-.05,.55,.03);mg.rotation.x=-.3;w.add(mg);
+     put(w,-1.9,0,-2.7);col.push({x0:-2.25,x1:-1.3,z0:-3,z1:-2.4,y0:0,y1:1.3});deco(w,'查看：電焊機','電焊機和氣瓶，旁邊擱著一頂焊接面罩。地上散著焊渣。');}
+   // 電風扇、垃圾桶、掛在牆上的工作服、掃把
+   {const f=G2(),m=ph(0xd8d0b8);const p=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,1.1,6),m);p.position.y=.55;f.add(p);const b=new THREE.Mesh(new THREE.CylinderGeometry(.22,.24,.04,12),m);b.position.y=.02;f.add(b);
+     const cg=new THREE.Mesh(new THREE.TorusGeometry(.26,.012,5,20),m);cg.position.set(0,1.2,.05);f.add(cg);const bl=new THREE.Mesh(new THREE.CircleGeometry(.24,16),new THREE.MeshPhongMaterial({color:0x6a9ac8,transparent:true,opacity:.45,side:THREE.DoubleSide}));bl.position.set(0,1.2,.04);f.add(bl);
+     const mo=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.14,10),m);mo.rotation.x=PI/2;mo.position.set(0,1.2,-.06);f.add(mo);put(f,-5.2,0,-2.6,.9);}
+   {const tc=G2();tc.add(new THREE.Mesh(new THREE.CylinderGeometry(.16,.14,.42,12,1,true),ph(0x3a6a3a,{side:THREE.DoubleSide})));tc.children[0].position.y=.21;const lb=new THREE.Mesh(new THREE.CylinderGeometry(.17,.16,.08,12,1,true),new THREE.MeshPhongMaterial({color:0x1a1a1a,side:THREE.DoubleSide}));lb.position.y=.41;tc.add(lb);put(tc,-2.3,0,-4.3);}
+   {const cl=G2(),jm=ph(0x3a4a6a);const bd=new THREE.Mesh(new THREE.BoxGeometry(.05,.62,.48),jm);bd.position.y=-.32;cl.add(bd);[-1,1].forEach(s=>{const sl=new THREE.Mesh(new THREE.BoxGeometry(.05,.5,.12),jm);sl.position.set(0,-.3,s*.3);sl.rotation.x=s*.12;cl.add(sl);});const hk=new THREE.Mesh(new THREE.TorusGeometry(.04,.006,4,8,PI),MT.steel);hk.position.y=.02;hk.rotation.y=PI/2;cl.add(hk);put(cl,2.83,1.95,-8.6);}
+   {const br=G2();const h=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,1.2,5),MT.woodL);h.position.y=.65;br.add(h);const hd=new THREE.Mesh(new THREE.BoxGeometry(.25,.08,.05),ph(0x2a5aa8));hd.position.y=.06;br.add(hd);for(let i=0;i<10;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.008,.1,.03),ph(0xc8b070));s.position.set(-.11+i*.024,-.03,0);br.add(s);}br.rotation.z=-.12;put(br,2.7,0,-3.15,PI/2);}
+   // 牆上的月曆、時鐘
+   {const cal=mesh(new THREE.PlaneGeometry(.4,.56),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.fillStyle='#f4f0e6';q.fillRect(0,0,n,n);q.fillStyle='#b02a1a';q.fillRect(0,0,n,n*.32);q.fillStyle='#f4f0e6';q.font='bold 14px sans-serif';q.fillText('十一月',12,15);q.fillStyle='#3a3a3a';for(let r=0;r<5;r++)for(let c=0;c<7;c++)q.fillRect(4+c*8.5,26+r*7,4,3);q.fillStyle='#c82a1a';q.fillRect(4,26,4,3);})}),2.84,1.75,-13.2);cal.rotation.y=-PI/2;
+    const ck=mesh(new THREE.CircleGeometry(.16,18),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.fillStyle='#f0ece0';q.fillRect(0,0,n,n);q.strokeStyle='#2a2a2a';q.lineWidth=3;q.beginPath();q.arc(n/2,n/2,n/2-3,0,7);q.stroke();for(let i=0;i<12;i++){const a=i/12*6.283;q.fillStyle='#2a2a2a';q.fillRect(n/2+Math.sin(a)*24-1,n/2-Math.cos(a)*24-1,3,3);}q.lineWidth=2.5;q.beginPath();q.moveTo(n/2,n/2);q.lineTo(n/2+12,n/2+6);q.moveTo(n/2,n/2);q.lineTo(n/2-3,n/2-20);q.stroke();})}),2.84,2.55,-9.6);ck.rotation.y=-PI/2;}
+  }
   /* ---------- 後棚（廚房） ---------- */
   wZ(-20,-9,9,0,H,MT.corr,[[-4.2,-2.6]],2.5);
   wZ(-30,-9,9,0,4.2,M.brick);
@@ -264,7 +368,7 @@ function build(K){
    [[-3.3,.33,0x8a8a90],[-2.8,.33,0x3a3a3c],[-3.1,.73,0xb04a2a],[-2.7,1.13,0x8a8a90]].forEach(q=>a(new THREE.CylinderGeometry(.1,.08,.12,10),ph(q[2],{shininess:60}),q[0],q[1],-29.3));
    a(new THREE.CylinderGeometry(.03,.03,1.4,6),MT.dark,7.6,.7,-21.4);a(new THREE.CylinderGeometry(.3,.3,.04,8),MT.dark,7.6,.02,-21.4);const fan=a(new THREE.TorusGeometry(.4,.02,5,18),ph(0xc8b070),7.6,1.5,-21.4);a(new THREE.CircleGeometry(.4,14),new THREE.MeshPhongMaterial({color:0x8a8070,transparent:true,opacity:.35,side:THREE.DoubleSide}),7.6,1.5,-21.4);
    [[-.2],[.2]].forEach(q=>{const l=a(new THREE.BoxGeometry(.05,2.6,.05),MT.woodD,1.2+q[0],1.3,-29.2);l.rotation.x=.2;});for(let i=0;i<6;i++){const s=a(new THREE.BoxGeometry(.4,.03,.05),MT.woodD,1.2,.3+i*.4,-29.42+i*.08);}
-   a(new THREE.BoxGeometry(.5,.3,.36),ph(0xd8a020),3.2,.15,-28.6);a(new THREE.BoxGeometry(.45,.05,.3),ph(0x8a4a2a),-1,.2,-27).rotation.y=.4;
+   {const cr=a(new THREE.BoxGeometry(.5,.3,.36),new THREE.MeshPhongMaterial({map:tex((q,n)=>{q.clearRect(0,0,n,n);q.fillStyle='#e8b020';q.fillRect(0,0,n,8);q.fillRect(0,n-6,n,6);q.fillRect(0,0,6,n);q.fillRect(n-6,0,6,n);for(let y=12;y<n-6;y+=9)for(let x=10;x<n-6;x+=9)q.fillRect(x,y,4,5);}),transparent:true,alphaTest:.4,side:THREE.DoubleSide}),3.2,.15,-28.6);}a(new THREE.CylinderGeometry(.16,.16,.04,14),ph(0xc8a070),-1,.62,-29.3);
    scene.add(Pr.flatten(g));col.push({x0:-8.3,x1:-5.6,z0:-22.5,z1:-20.8,y0:0,y1:1.8});col.push({x0:-4.95,x1:-4.45,z0:-22.55,z1:-22.05,y0:0,y1:1});col.push({x0:-3.7,x1:-2.3,z0:-29.6,z1:-29,y0:0,y1:1.2});col.push({x0:7.3,x1:7.9,z0:-21.7,z1:-21.1,y0:0,y1:1.6});
    deco(g,'查看：棚子裡的東西','冰箱、洗衣機、瓦斯桶。他平常就在這個棚子底下煮飯。冰箱是新型的，沒有接水盤。');}
   {const g=G2();g.add(Pr.C.basinStack?new THREE.Group():new THREE.Group());const rb=pail(0xc83a3a,.2,.3,.12,0);rb.rotation.x=PI;rb.position.set(-1.8,.13,-26.2);scene.add(rb);deco(rb,'查看：倒扣的臉盆','紅色臉盆是倒扣著放的，不會積水。這是對的放法。');}
@@ -283,7 +387,7 @@ function build(K){
    a(new THREE.BoxGeometry(.05,1.7,.75),MT.woodD,9.42,.85,-4.2,0,0,-.12);a(new THREE.BoxGeometry(.03,1.5,.6),ph(0x6a6a62),9.47,.8,-4.2,0,0,-.12);
    [[10.3,-8.6,0xd88a8a],[10.5,-8.9,0xd88a8a],[10.1,-9.0,0x9ac0b0]].forEach(q=>a(new THREE.CircleGeometry(.15,10),ph(q[2],{side:THREE.DoubleSide}),q[0],.3,q[1],-1.2,R(),0));
    for(let i=0;i<6;i++)a(new THREE.CylinderGeometry(.035,.035,.22,6),ph([0x5a2a0e,0x1e4a22,0xc8d8e0][i%3],{transparent:true,opacity:.8}),9.5+R()*1.3,.06,-5-R()*10,PI/2,R()*3,0);
-   a(new THREE.BoxGeometry(.5,.5,.5),ph(0x1a1a1c),9.7,.3,-6.4,0,.3,.1);
+   a(new THREE.BoxGeometry(.5,.42,.45),ph(0x6a5a48),9.7,.24,-6.4,0,.3,.05);a(new THREE.PlaneGeometry(.34,.28),ph(0x1a2a2a,{shininess:120,specular:0x666666}),9.7+Math.sin(.3)*.23,.26,-6.4+Math.cos(.3)*.23,0,.3,0);a(new THREE.BoxGeometry(.06,.06,.02),ph(0x2a2a2a),9.85,.12,-6.2,0,.3,0);
    for(let i=0;i<40;i++)tuft(g,9.3+R()*1.6,0,-15-R()*5,.25+R()*.5);for(let i=0;i<16;i++)tuft(g,9.3+R()*1.6,0,-3-R()*12,.12+R()*.2);
    scene.add(Pr.flatten(g));
    const tree=G2();const tk=new THREE.Mesh(new THREE.CylinderGeometry(.03,.05,3.6,6),ph(0x4a3a2a));tk.position.y=1.8;tree.add(tk);for(let i=0;i<14;i++){const lf=new THREE.Mesh(new THREE.PlaneGeometry(.5,.5),Pr.MAT.leaf('hosta'));lf.position.set((R()-.5)*1.1,1.4+R()*2.6,(R()-.5)*1.1);lf.rotation.set(R()*3,R()*3,R()*3);tree.add(lf);}put(tree,10.3,0,-18.6);
@@ -351,8 +455,8 @@ function build(K){
      else{hd.rotation.x=.1;g.position.y=0;tl.rotation.x=.4+Math.sin(t*9)*.25;}});
    deco(g,'查看：狗','黑色的米克斯，脖子上有項圈。牠一直盯著你。');}
   // 空屋房間裡的第二隻狗：玩家進門時從黑暗中衝出去
-  {const g=makeDog(0x7a5a36,0xc8a070),U=g.userData;g.position.set(-20.3,0,-13.2);g.rotation.y=.6;g.scale.y=.55;scene.add(g);
-   const path=[[-18.5,-9.2],[-18.5,-6.2],[-16.2,-3.4],[-16.2,-1.4],[-15.2,4],[-11,10.5]];
+  {const g=makeDog(0x7a5a36,0xc8a070),U=g.userData;g.position.set(-14.6,0,-8.75);g.rotation.y=-PI/2;g.scale.y=.55;scene.add(g);
+   const path=[[-16.4,-9.5],[-18.5,-9.1],[-18.5,-6.2],[-16.2,-3.4],[-16.2,-1.4],[-15.2,4],[-11,10.5]];
    const D2=G.dog2={g,run:0,i:0,last:0};
    anim.push(t=>{const dt=Math.min(.05,t-(D2.last||t));D2.last=t;if(!D2.run||D2.i>=path.length){if(D2.i>=path.length)g.visible=false;return;}
      g.scale.y=1;if(D2.wait>0){D2.wait-=dt;U.hd.rotation.x=Math.sin(t*18)>.2?-.4:.05;g.position.y=Math.abs(Math.sin(t*9))*.04;return;}const q=path[D2.i],dx=q[0]-g.position.x,dz=q[1]-g.position.z,d=Math.hypot(dx,dz),sp=11*dt;
