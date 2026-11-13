@@ -59,7 +59,7 @@ function soft(g,px,fn){if(CANF){const f=g.filter;g.filter=`blur(${px}px)`;fn();g
 function scan(o,bugs,done){const tk=++token;
   host(`<div class="fwh"><span class="step">探照</span><b>用手電筒照水面，看水裡有沒有孑孓</b></div>
    <div class="fwm"><div class="fwc"><canvas id="fws" width="640" height="420" ${CANVAS}></canvas></div>
-   <div class="fws"><p>手電筒（游標／手指）移到水面上，<b>慢慢</b>照過每一個角落。看清楚在動的是什麼，再決定要不要採樣。</p>
+   <div class="fws"><p>游標／手指握的是<b>手電筒</b>，光照在它的<b>左上方</b>。<b>慢慢</b>照過水面每一個角落，看清楚在動的是什麼，再決定要不要採樣。</p>
     <div class="col" id="scb"><button data-v="1" disabled>有看到孑孓，要採樣</button><button data-v="0" disabled>沒看到孑孓，不採樣</button></div>
     <button id="schelp" style="border-color:#c9a44e;color:#e0b050;text-align:center">？ 水裡常見的東西</button>
     <div id="sctip" class="mut" style="display:none;font-size:13px;line-height:1.55">・<b>孑孓</b>：細長，常倒吊在水面不動，受驚時會一扭一扭地往下鑽，過一陣子再浮上來。<br>・<b>水蚤</b>：很小的圓點，一跳一跳地前進。<br>・<b>小甲蟲</b>：圓圓的，有腳，在水裡划來划去。<br>・<b>落葉、碎屑</b>：不會自己動。</div></div></div>`);
@@ -76,7 +76,7 @@ function scan(o,bugs,done){const tk=++token;
   $('schelp').onclick=()=>{const t=$('sctip');t.style.display=t.style.display==='none'?'':'none';};
   $('scb').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(fin)return;fin=true;token++;done(b.dataset.v==='1');});
   loop(tk,(dt,now)=>{t0+=dt;
-    const px=st.seen?st.x:CX+Math.sin(t0*.8)*60,py=st.seen?st.y:CY+Math.cos(t0*.6)*40,bsp=Math.hypot(px-lx,py-ly)/Math.max(dt,1e-3);moved+=Math.hypot(px-lx,py-ly);lx=px;ly=py;
+    const BX=110,BY=95,hx=st.seen?st.x:CX+BX+Math.sin(t0*.8)*60,hy=st.seen?st.y:CY+BY+Math.cos(t0*.6)*40,px=Math.max(0,Math.min(640,hx-BX)),py=Math.max(0,Math.min(420,hy-BY)),bsp=Math.hypot(px-lx,py-ly)/Math.max(dt,1e-3);moved+=Math.hypot(px-lx,py-ly);lx=px;ly=py;
     if(t0>2.2&&moved>300)$('scb').querySelectorAll('button').forEach(b=>b.disabled=false);
     // 孑孓：倒吊、受驚往下鑽、再浮上來
     lar.forEach(l=>{l.t+=dt;const near=Math.hypot(l.x-px,l.y-py)<70;
@@ -104,7 +104,19 @@ function scan(o,bugs,done){const tk=++token;
     const dk=g.createRadialGradient(px,py,30,px,py,coarse?135:120);dk.addColorStop(0,'rgba(0,0,0,0)');dk.addColorStop(.6,'rgba(0,0,0,.18)');dk.addColorStop(1,'rgba(0,0,0,.955)');g.fillStyle=dk;g.fillRect(0,0,640,420);
     const hl=g.createRadialGradient(px,py,0,px,py,60);hl.addColorStop(0,'rgba(255,245,215,.16)');hl.addColorStop(1,'rgba(255,245,215,0)');g.fillStyle=hl;g.fillRect(px-60,py-60,120,120);
     g.fillStyle='rgba(255,255,255,.35)';g.beginPath();g.ellipse(px-14,py-10,9,4,-.4,0,7);g.fill();
-    if(t0<4){g.fillStyle='rgba(224,214,188,.8)';g.font='14px sans-serif';g.fillText(coarse?'手指拖曳＝手電筒的光':'移動游標＝手電筒的光',20,404);}
+    // 手電筒本體：握把在游標／手指的位置，燈頭朝左上方的光圈
+    {const dx=px-hx,dy=py-hy,dl=Math.hypot(dx,dy)||1,ux=dx/dl,uy=dy/dl,nx=-uy,ny=ux,headX=hx+ux*58,headY=hy+uy*58,tailX=hx-ux*44,tailY=hy-uy*44;
+     const cone=g.createLinearGradient(headX,headY,px,py);cone.addColorStop(0,'rgba(255,245,215,.13)');cone.addColorStop(1,'rgba(255,245,215,.02)');g.fillStyle=cone;
+     g.beginPath();g.moveTo(headX+nx*10,headY+ny*10);g.lineTo(px+nx*70,py+ny*70);g.lineTo(px-nx*70,py-ny*70);g.lineTo(headX-nx*10,headY-ny*10);g.fill();
+     g.lineCap='round';g.strokeStyle='#1c1d1f';g.lineWidth=20;g.beginPath();g.moveTo(tailX,tailY);g.lineTo(headX-ux*14,headY-uy*14);g.stroke();
+     g.strokeStyle='#3a3c40';g.lineWidth=14;g.beginPath();g.moveTo(tailX,tailY);g.lineTo(headX-ux*14,headY-uy*14);g.stroke();
+     g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=3;g.beginPath();g.moveTo(tailX+nx*4,tailY+ny*4);g.lineTo(headX-ux*16+nx*4,headY-uy*16+ny*4);g.stroke();
+     for(let k=0;k<4;k++){const t=.15+k*.12,gx=tailX+(headX-tailX)*t,gy=tailY+(headY-tailY)*t;g.strokeStyle='#121214';g.lineWidth=2;g.beginPath();g.moveTo(gx+nx*7,gy+ny*7);g.lineTo(gx-nx*7,gy-ny*7);g.stroke();}
+     g.strokeStyle='#4a4c50';g.lineWidth=28;g.lineCap='butt';g.beginPath();g.moveTo(headX-ux*16,headY-uy*16);g.lineTo(headX,headY);g.stroke();
+     g.fillStyle='#fff6d8';g.beginPath();g.ellipse(headX,headY,4,13,Math.atan2(uy,ux),0,7);g.fill();
+     g.fillStyle='#d8302a';g.beginPath();g.arc(hx+nx*8,hy+ny*8,3,0,7);g.fill();
+     if(coarse&&st.down)drawFinger(g,hx,hy,true);}
+    if(t0<4){g.fillStyle='rgba(224,214,188,.8)';g.font='14px sans-serif';g.fillText(coarse?'手指拖曳的是手電筒，光照在左上方':'游標就是手電筒，光照在左上方',20,404);}
   });}
 
 /* ---------- 1. 吸取幼蟲 ---------- */
