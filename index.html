@@ -416,14 +416,52 @@ function ending(){
 }
 function manual(){
   openPanel(`<h2>調查手冊</h2>
-  <h3>斑蚊與家蚊幼蟲</h3><div class="cmp"><div><div class="lv">${larvaSVG('aedes',true)}</div><p class="mut">斑蚊</p></div><div><div class="lv">${larvaSVG('culex',true)}</div><p class="mut">家蚊</p></div></div>
+  <div class="row" id="mtabs" style="margin-bottom:8px"><button class="pri" data-t="0">調查資訊</button><button data-t="1">陽性容器與探照</button></div>
+  <div id="mt0"><h3>斑蚊與家蚊幼蟲</h3><div class="cmp"><div><div class="lv">${larvaSVG('aedes',true)}</div><p class="mut">斑蚊</p></div><div><div class="lv">${larvaSVG('culex',true)}</div><p class="mut">家蚊</p></div></div>
   <table><tr><th></th><th>斑蚊</th><th>家蚊</th></tr><tr><td>呼吸管</td><td>短而粗</td><td>細長</td></tr><tr><td>呼吸管毛</td><td>1 對</td><td>多對</td></tr><tr><td>常見的水</td><td>較乾淨的積水：花瓶、底盤、水桶、輪胎、地下室</td><td>有機質多的污水：水溝、污水桶</td></tr><tr><td>卵</td><td>一顆一顆黏在水面上方的容器壁，耐乾燥</td><td>黏成一團卵塊浮在水面</td></tr><tr><td>傳播登革熱</td><td>會</td><td>不會</td></tr></table>
   <h3>處置：巡、倒、清、刷</h3><p>巡視室內外；倒掉積水；清除不用的容器；刷洗容器內壁去除卵。還要用的儲水容器加蓋。無法清除的大面積積水由防疫人員投藥，並通報管理單位。</p>
   <h3>指數</h3><p>住宅指數＝斑蚊陽性戶數÷調查戶數×100%<br>容器指數＝斑蚊陽性容器數÷積水容器數×100%<br>布氏指數＝斑蚊陽性容器數÷調查戶數×100</p>
   <h3>溝通</h3><p>表明身分與目的；先回應對方的顧慮；尊重對方的權責和使用需求；邀請一起檢查；罰則是最後手段。</p>
+  </div>
+  <div id="mt1" style="display:none">
+  <h3>陽性容器常見的樣子</h3>
+  <ul style="margin:4px 0 8px 18px;padding:0;line-height:1.6">
+   <li><b>開口朝上、淋得到雨</b>的人工容器：水桶、花瓶、廢輪胎、輪圈蓋、作品或雕塑的凹面</li>
+   <li><b>會積水的皺褶與凹陷</b>：帆布、塑膠布、疊在一起的底盤夾層</li>
+   <li><b>藏在機器裡的接水盤</b>：冰箱除霜水盤、飲水機接水盤，要抽出來看</li>
+   <li><b>沒蓋緊或沒蓋的儲水</b>：接雨水的桶子、沖廁所用的水桶、蓋子生鏽的油漆桶</li>
+   <li><b>不容易看到的位置</b>：高處的水箱、半埋在土裡的桶子、角落和底部</li>
+  </ul>
+  <p class="mut" style="margin:0 0 6px">其他線索：水線上方的容器壁有一圈<b>小黑點</b>（斑蚊卵）；水面漂著<b>空的蛹殼</b>。水看起來很髒，不代表沒有斑蚊，要撈起來鑑定。</p>
+  <h3>手電筒照下去會看到什麼</h3>
+  <div id="mlv" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">
+   ${[['larva','孑孓','細長、頭比較粗。常倒吊在水面不動，受驚時一扭一扭往下鑽，過一陣子再浮上來。'],['pupa','蛹','像逗號，在水面附近。受驚會翻滾往下沉。'],['flea','水蚤','很小的淺色圓點，一跳一跳地前進。不是蚊子。'],['beetle','小甲蟲','圓圓的、有腳，在水裡划來划去，速度很穩。不是蚊子。'],['leaf','落葉、碎屑','不會自己動，只會跟著水面慢慢飄。']].map(q=>`<div style="background:#0b1113;border:1px solid #2c3a3d;padding:6px"><canvas data-k="${q[0]}" width="150" height="90" style="width:100%;display:block"></canvas><b style="font-size:14px">${q[1]}</b><div class="mut" style="font-size:12.5px;line-height:1.5">${q[2]}</div></div>`).join('')}
+  </div>
+  <h3>探照的訣竅</h3>
+  <p>光圈<b>慢慢</b>移動；移太快，孑孓會躲到水底。看到有東西倒吊在水面不動，<b>停下來多看幾秒</b>，看牠會不會扭動。邊緣和角落也要照到。沒看到孑孓，但看到一跳一跳或划來划去的，是水蚤或甲蟲。</p>
+  </div>
   <div class="row"><button class="pri" id="cl">關閉</button></div>`);
+  const tabs=[...document.querySelectorAll('#mtabs button')];tabs.forEach(b=>b.onclick=()=>{tabs.forEach(x=>x.classList.toggle('pri',x===b));$('mt0').style.display=b.dataset.t==='0'?'':'none';$('mt1').style.display=b.dataset.t==='1'?'':'none';});
+  const cvs=[...document.querySelectorAll('#mlv canvas')],t0=performance.now();
+  (function anim(now){if(!$('mlv')||!$('panel').classList.contains('open'))return;const t=(now-t0)/1000;cvs.forEach(c=>manualDraw(c.getContext('2d'),c.dataset.k,t));requestAnimationFrame(anim);})(t0);
   $('cl').onclick=()=>{ if(started)closePanel(); else $('panel').classList.remove('open'); };
 }
+/* 手冊裡的俯視小動畫，畫法和探照畫面相同 */
+function manualDraw(g,k,t){const W=150,H=90;g.fillStyle='#07090a';g.fillRect(0,0,W,H);const gr=g.createRadialGradient(W/2,H/2,5,W/2,H/2,80);gr.addColorStop(0,'#2a4a54');gr.addColorStop(1,'#0e2028');g.fillStyle=gr;g.fillRect(0,0,W,H);
+  if(k==='larva'){const cyc=t%6,dive=cyc>3&&cyc<4.6,d=dive?Math.min(1,(cyc-3)*1.2):cyc>=4.6?Math.max(0,1-(cyc-4.6)*.7):0;
+    [[45,35,.4],[100,58,2.4]].forEach((q,i)=>{const sc=1-d*.45,L=34*sc,w=dive?Math.sin(t*16+i)*4.5:Math.sin(t*2+i)*.6,x=q[0]+(dive?Math.cos(q[2])*(cyc-3)*14:0),y=q[1]+(dive?Math.sin(q[2])*(cyc-3)*14:0);
+      g.save();g.translate(x,y);g.rotate(q[2]);g.globalAlpha=.95-d*.6;g.strokeStyle='rgba(60,44,28,.95)';g.lineCap='round';g.lineWidth=3.8*sc;g.beginPath();g.moveTo(-L/2,0);for(let j=1;j<=8;j++){const f=j/8;g.lineTo(-L/2+L*f,Math.sin(f*PI15+t*16*(dive?1:0))*w);}g.stroke();
+      g.fillStyle='rgba(50,36,22,.95)';g.beginPath();g.ellipse(L/2,0,5*sc,4.2*sc,0,0,7);g.fill();g.restore();});
+    g.globalAlpha=1;g.fillStyle='rgba(224,214,188,.75)';g.font='11px sans-serif';g.fillText(dive?'受驚 → 扭動下鑽':'倒吊在水面',6,84);}
+  else if(k==='pupa'){const r=(t%5)>3?Math.min(1,((t%5)-3)):0;g.save();g.translate(75,45+r*12);g.rotate(r*6);g.globalAlpha=1-r*.4;g.fillStyle='rgba(70,52,34,.95)';g.beginPath();g.arc(0,0,9,0,7);g.fill();g.strokeStyle='rgba(90,68,44,.95)';g.lineWidth=4;g.lineCap='round';g.beginPath();g.arc(6,8,10,-.6,2);g.stroke();g.restore();g.globalAlpha=1;}
+  else if(k==='flea'){for(let i=0;i<7;i++){const ph=t*2.2+i*1.7,hop=Math.floor(ph),fr=ph-hop,ease=1-Math.pow(1-Math.min(1,fr*3),3),a0=hop*2.4+i,a1=(hop+1)*2.4+i,x=75+Math.cos(i*1.3)*45+Math.cos(a0)*8+(Math.cos(a1)-Math.cos(a0))*8*ease,y=45+Math.sin(i*2.1)*28+Math.sin(a0)*6+(Math.sin(a1)-Math.sin(a0))*6*ease;
+      g.fillStyle='rgba(225,210,170,.85)';g.beginPath();g.ellipse(x,y,3.8,3,0,0,7);g.fill();g.fillStyle='#1a1410';g.fillRect(x+1.5,y-.8,1.8,1.8);}}
+  else if(k==='beetle'){const a=t*.9,x=75+Math.cos(a)*40,y=45+Math.sin(a)*22,h=a+Math.PI/2;g.save();g.translate(x,y);g.rotate(h);g.scale(1.5,1.5);g.strokeStyle='rgba(30,22,14,.9)';g.lineWidth=1.2;for(let k2=-1;k2<=1;k2++){const sw=Math.sin(t*12+k2)*3;g.beginPath();g.moveTo(k2*3,-3);g.lineTo(k2*3+sw,-9);g.moveTo(k2*3,3);g.lineTo(k2*3+sw,9);g.stroke();}
+      g.fillStyle='#2a1e12';g.beginPath();g.ellipse(0,0,7,4.5,0,0,7);g.fill();g.fillStyle='#120c08';g.beginPath();g.arc(6.5,0,2.4,0,7);g.fill();g.restore();}
+  else{[[40,30,.5],[105,55,2],[70,65,1.2]].forEach((q,i)=>{const x=q[0]+Math.sin(t*.3+i)*3,y=q[1]+Math.cos(t*.25+i)*2;g.save();g.translate(x,y);g.rotate(q[2]);g.fillStyle='rgba(70,52,26,.85)';g.beginPath();g.ellipse(0,0,10,4.5,0,0,7);g.fill();g.strokeStyle='rgba(40,28,14,.7)';g.beginPath();g.moveTo(-10,0);g.lineTo(10,0);g.stroke();g.restore();});
+    g.fillStyle='rgba(30,26,20,.8)';for(let i=0;i<8;i++)g.fillRect(20+i*15,20+(i*37%50),3,2);}
+  const sp=g.createRadialGradient(W/2,H/2,20,W/2,H/2,85);sp.addColorStop(0,'rgba(0,0,0,0)');sp.addColorStop(1,'rgba(0,0,0,.6)');g.fillStyle=sp;g.fillRect(0,0,W,H);}
+const PI15=Math.PI*1.5;
 
 
 /* ================= 3D 工具 ================= */
