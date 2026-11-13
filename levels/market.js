@@ -63,7 +63,7 @@ const VAR={
 const BASE=JSON.parse(JSON.stringify(ITEMS));
 function shufflePositives(){
   const ids=Object.keys(VAR);for(let i=ids.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[ids[i],ids[j]]=[ids[j],ids[i]];}
-  const posSet=new Set(ids.slice(0,NPOS));
+  const posSet=new Set(ids.slice(0,[5,8,11][window.DIFF===undefined?1:window.DIFF]));
   ids.forEach(id=>{const b=JSON.parse(JSON.stringify(BASE[id])),pos=posSet.has(id),v=pos?VAR[id].P:VAR[id].N;
     if(b.larvae==='aedes'){b.posResult=b.result;}
     Object.assign(b,v);b.larvae=pos?'aedes':null;if(!pos){delete b.pupae;}ITEMS[id]=b;});

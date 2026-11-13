@@ -62,7 +62,7 @@ const ITEMS={
 };
 const CAND=['W1','W2','W5','W6','T1','Y1','Y2','Y3','D1','D3','D5'],NPOS=6;
 function shuffle(){const ids=CAND.slice();for(let i=ids.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[ids[i],ids[j]]=[ids[j],ids[i]];}
-  ids.forEach((id,k)=>{const o=ITEMS[id],pos=k<NPOS;o.larvae=pos?'aedes':null;o.result=pos?o.resP:o.resN;});}
+  ids.forEach((id,k)=>{const o=ITEMS[id],pos=k<[4,6,9][window.DIFF===undefined?1:window.DIFF];o.larvae=pos?'aedes':null;o.result=pos?o.resP:o.resN;});}
 
 const DLG={
  W:{who:'工寮主人',again:'（他還站在門口，手上拿著焊槍。）',nodes:[
@@ -205,12 +205,15 @@ function build(K){
    [[-4,-6],[-4,-14]].forEach(q=>{const s=new THREE.Mesh(new THREE.ConeGeometry(.28,.3,10,1,true),ph(0x2a3a34,{side:THREE.DoubleSide}));s.position.set(q[0],4.3,q[1]);g.add(s);const w=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,1.2,4),MT.dark);w.position.set(q[0],5,q[1]);g.add(w);});
    scene.add(Pr.flatten(g));light(0xc8b890,.55,11,-4,3.9,-6);const l2=light(0xc8b890,.4,10,-4,3.9,-14);anim.push(t=>{l2.intensity=(Math.sin(t*23)+Math.sin(t*3.7))>1.2?.05:.4;});}
   // 灰色隔間牆、小房門、廁所
-  wX(3,-16,-2.15,0,3.3,MT.panel,[[-11.68,-10.78]],2.05);wZ(-16,3.15,8.85,0,3.3,MT.panel);
+  wX(3,-16,-2.15,0,3.3,MT.panel,[[-11.85,-10.65]],2.05);wZ(-16,3.15,8.85,0,3.3,MT.panel);
   box(.06,2,.85,2.82,1,-6.2,MT.woodL,nb);mesh(new THREE.SphereGeometry(.03,6,5),MT.steel,2.77,1,-5.9);
-  {const fr=ph(0x8a6a44);box(.12,2.1,.06,2.9,1.05,-11.71,fr,nb);box(.12,2.1,.06,2.9,1.05,-10.75,fr,nb);box(.12,.08,1.02,2.9,2.08,-11.23,fr,nb);
-   const dr=G2();const leaf=new THREE.Mesh(new THREE.BoxGeometry(.85,2,.04),MT.woodL);leaf.position.set(.43,1,0);dr.add(leaf);const kn=new THREE.Mesh(new THREE.SphereGeometry(.03,6,5),MT.steel);kn.position.set(.78,1,.04);dr.add(kn);
-   put(dr,3.05,0,-11.66,-1.25);
-   const sl=ph(0x3a6aa8);[[-0.12],[0.12]].forEach(q=>{const s=new THREE.Mesh(new THREE.BoxGeometry(.26,.03,.11),sl);s.position.set(2.45,.015,-11.2+q[0]);s.rotation.y=.2+q[0];scene.add(s);});}
+  {const fr=ph(0x8a6a44);box(.12,2.1,.06,2.9,1.05,-11.88,fr,nb);box(.12,2.1,.06,2.9,1.05,-10.62,fr,nb);box(.12,.08,1.32,2.9,2.08,-11.25,fr,nb);
+   const dr=G2(),leaf=new THREE.Mesh(new THREE.BoxGeometry(.04,2,1.16),MT.woodL);leaf.position.set(0,1,.6);dr.add(leaf);const kn=new THREE.Mesh(new THREE.SphereGeometry(.03,6,5),MT.steel);kn.position.set(-.04,1,1.05);dr.add(kn);const kn2=kn.clone();kn2.position.x=.04;dr.add(kn2);
+   const sign=new THREE.Mesh(new THREE.PlaneGeometry(.22,.1),new THREE.MeshPhongMaterial({map:signTex(['廁所'],'#e8e4d8','#2a2a2a',80)}));sign.rotation.y=-PI/2;sign.scale.x=-1;sign.position.set(-.025,1.6,.6);dr.add(sign);
+   put(dr,3.0,0,-11.83);const wc={open:0,cur:0};G.wcDoor=wc;G.col.push({x0:2.85,x1:3.15,z0:-11.85,z1:-10.65,y0:0,y1:2.1,id:'wcDoor'});
+   const it={type:'fn',label:'開門：廁所',fn:()=>{wc.open=!wc.open;K.burst(.35,260,.25,'bandpass');it.label=wc.open?'關門：廁所':'開門：廁所';if(wc.open)K.unblock('wcDoor');else G.col.push({x0:2.85,x1:3.15,z0:-11.85,z1:-10.65,y0:0,y1:2.1,id:'wcDoor'});}};
+   interact(dr,it);anim.push(()=>{const tg=wc.open?1:0;if(wc.cur!==tg){wc.cur+=Math.sign(tg-wc.cur)*.08;wc.cur=Math.max(0,Math.min(1,wc.cur));dr.rotation.y=1.45*wc.cur;}});
+   const sl=ph(0x3a6aa8);[[-0.12],[0.12]].forEach(q=>{const s=new THREE.Mesh(new THREE.BoxGeometry(.26,.03,.11),sl);s.position.set(2.45,.015,-11.25+q[0]);s.rotation.y=.2+q[0];scene.add(s);});}
   {const tw=P(tex((g,n)=>{g.fillStyle='#c8c8c0';g.fillRect(0,0,n,n);for(let y=0;y<n;y+=8)for(let x=0;x<n;x+=8){const k=200+(R()*18|0);g.fillStyle=`rgb(${k},${k},${k-6})`;g.fillRect(x+1,y+1,7,7);}g.fillStyle='rgba(70,60,40,.25)';for(let i=0;i<14;i++)g.fillRect(R()*n,n*.6+R()*n*.4,2+R()*8,2+R()*10);}),{shininess:60,specular:0x444444},.8);
    const tf=P(tex((g,n)=>{g.fillStyle='#6a6a64';g.fillRect(0,0,n,n);for(let y=0;y<n;y+=16)for(let x=0;x<n;x+=16){const k=150+(R()*20|0);g.fillStyle=`rgb(${k},${k-4},${k-12})`;g.fillRect(x+1,y+1,15,15);}g.fillStyle='rgba(30,26,20,.3)';for(let i=0;i<10;i++){g.beginPath();g.arc(R()*n,R()*n,2+R()*8,0,7);g.fill();}}),{shininess:40},.8);
    wZ(-9.3,3.15,5.8,0,3.3,tw);wZ(-13.1,3.15,5.8,0,3.3,tw);wX(5.8,-13.1,-9.3,0,3.3,tw);
