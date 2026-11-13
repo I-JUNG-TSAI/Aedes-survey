@@ -29,7 +29,7 @@ python3 -m http.server 8000
 | `levels/market-hd.js` | 第一關的高解析度程序材質與精細物件（水塔、廁所、垃圾等） |
 | `levels/market-tex.js` | 第一關使用的小型照片材質（base64） |
 | `levels/props.js` | 容器與盆栽模型庫（水桶、花盆、底盤、植物等） |
-| `levels/fieldwork.js` | 現場小遊戲：滴管採樣、玻璃瓶鑑定、倒水／投藥 |
+| `levels/fieldwork.js` | 現場小遊戲：俯視探照（判斷要不要採樣）、滴管採樣（幼蟲模糊）、玻璃瓶鑑定（放大鏡內清楚）、倒水／投藥 |
 | `levels/humans.js` | 人物模型（PS1 風格、可換裝、姿勢與表情） |
 
 ## 關卡資料格式

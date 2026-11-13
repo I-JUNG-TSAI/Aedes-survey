@@ -48,6 +48,63 @@ function stepLarva(l,dt,box){l.t+=dt;const hang=PI/2-SP[l.sp].hang*Math.sign(Mat
 function scare(ls,x,y,r){ls.forEach(l=>{const cx=l.x+Math.cos(l.ang)*l.L*.5,cy=l.y+Math.sin(l.ang)*l.L*.5;if(Math.hypot(cx-x,cy-y)<r&&l.state!=='dive')l.state='dive';});}
 function waterCol(o){return o.larvae==='culex'?['#2e3218','#1a1c0c']:o.algae?['#3a4a1c','#1e2a10']:['#1e3a44','#0e2028'];}
 
+/* 模糊繪製：支援 canvas filter 的瀏覽器直接模糊，否則用多次錯位繪製模擬 */
+const CANF=(()=>{try{const c=document.createElement('canvas').getContext('2d');c.filter='blur(2px)';return c.filter==='blur(2px)';}catch(e){return false;}})();
+function soft(g,px,fn){if(CANF){const f=g.filter;g.filter=`blur(${px}px)`;fn();g.filter=f;}
+  else{const a=g.globalAlpha;g.globalAlpha=a*.32;[[-px*.8,0],[px*.8,0],[0,-px*.8],[0,px*.8]].forEach(o=>{g.save();g.translate(o[0],o[1]);fn();g.restore();});g.globalAlpha=a*.3;fn();g.globalAlpha=a;}}
+
+/* ---------- 0. 探照：俯視水面，用手電筒找有沒有東西在動 ---------- */
+function scan(o,bugs,done){const tk=++token;
+  host(`<div class="fwh"><span class="step">探照</span><b>用手電筒照水面，看水裡有沒有孑孓</b></div>
+   <div class="fwm"><div class="fwc"><canvas id="fws" width="640" height="420" ${CANVAS}></canvas></div>
+   <div class="fws"><p>手電筒（游標／手指）移到水面上，<b>慢慢</b>照過每一個角落。看清楚在動的是什麼，再決定要不要採樣。</p>
+    <div class="col" id="scb"><button data-v="1" disabled>有看到孑孓，要採樣</button><button data-v="0" disabled>沒看到孑孓，不採樣</button></div>
+    <button id="schelp" style="border-color:#c9a44e;color:#e0b050;text-align:center">？ 水裡常見的東西</button>
+    <div id="sctip" class="mut" style="display:none;font-size:13px;line-height:1.55">・<b>孑孓</b>：細長，常倒吊在水面不動，受驚時會一扭一扭地往下鑽，過一陣子再浮上來。<br>・<b>水蚤</b>：很小的圓點，一跳一跳地前進。<br>・<b>小甲蟲</b>：圓圓的，有腳，在水裡划來划去。<br>・<b>落葉、碎屑</b>：不會自己動。</div></div></div>`);
+  const c=$('fws'),g=c.getContext('2d'),st={x:320,y:210,down:false,seen:false};pointer(c,st);
+  const coarse=matchMedia('(pointer: coarse)').matches,CX=320,CY=210,RX=o.name.match(/盤|槽|凹槽|水溝|積水/)?250:180,RY=o.name.match(/盤|槽|凹槽|水溝|積水/)?150:175;
+  const wc=waterCol(o),inW=(x,y,m)=>((x-CX)/(RX-(m||0)))**2+((y-CY)/(RY-(m||0)))**2<1;
+  const rp=m=>{let x,y;do{x=CX+(R()*2-1)*RX;y=CY+(R()*2-1)*RY;}while(!inW(x,y,m||30));return[x,y];};
+  const lar=[],fle=[],bee=[],deb=[];
+  if(o.larvae)for(let i=0;i<5+(R()*3|0);i++){const p=rp(40);lar.push({x:p[0],y:p[1],a:R()*7,t:R()*9,d:0,st:'hang',tm:1+R()*5,len:o.larvae==='culex'?46:34});}
+  if(bugs.flea)for(let i=0;i<9+(R()*6|0);i++){const p=rp(25);fle.push({x:p[0],y:p[1],vx:0,vy:0,tm:R(),d:.2+R()*.6});}
+  if(bugs.beetle)for(let i=0;i<1+(R()*2|0);i++){const p=rp(50);bee.push({x:p[0],y:p[1],a:R()*7,va:0,t:R()*9,d:.4});}
+  for(let i=0;i<10;i++){const p=rp(20);deb.push({x:p[0],y:p[1],a:R()*7,k:R()<.4?'leaf':'speck',s:.6+R()*.8});}
+  let t0=0,moved=0,lx=CX,ly=CY,fin=false;
+  $('schelp').onclick=()=>{const t=$('sctip');t.style.display=t.style.display==='none'?'':'none';};
+  $('scb').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(fin)return;fin=true;token++;done(b.dataset.v==='1');});
+  loop(tk,(dt,now)=>{t0+=dt;
+    const px=st.seen?st.x:CX+Math.sin(t0*.8)*60,py=st.seen?st.y:CY+Math.cos(t0*.6)*40,bsp=Math.hypot(px-lx,py-ly)/Math.max(dt,1e-3);moved+=Math.hypot(px-lx,py-ly);lx=px;ly=py;
+    if(t0>2.2&&moved>300)$('scb').querySelectorAll('button').forEach(b=>b.disabled=false);
+    // 孑孓：倒吊、受驚往下鑽、再浮上來
+    lar.forEach(l=>{l.t+=dt;const near=Math.hypot(l.x-px,l.y-py)<70;
+      if(l.st==='hang'){l.d+=(0-l.d)*dt*2;l.tm-=dt;if((near&&bsp>420)||l.tm<0&&R()<.01){l.st='dive';l.tm=1+R()*1.5;l.a+=(R()-.5)*1.5;}}
+      else if(l.st==='dive'){l.d=Math.min(1,l.d+dt*1.1);l.x+=Math.cos(l.a)*dt*18;l.y+=Math.sin(l.a)*dt*18;l.tm-=dt;if(l.tm<0){l.st='up';}}
+      else{l.d=Math.max(0,l.d-dt*.35);if(l.d<=0){l.st='hang';l.tm=2+R()*5;}}
+      if(!inW(l.x,l.y,30)){l.a+=PI;l.x+=Math.cos(l.a)*4;l.y+=Math.sin(l.a)*4;}});
+    fle.forEach(f=>{f.tm-=dt;if(f.tm<0){f.tm=.25+R()*.45;const a=R()*7,s=40+R()*50;f.vx=Math.cos(a)*s;f.vy=Math.sin(a)*s;}f.vx*=Math.pow(.02,dt);f.vy*=Math.pow(.02,dt);f.x+=f.vx*dt;f.y+=f.vy*dt;if(!inW(f.x,f.y,20)){f.vx*=-1;f.vy*=-1;f.x+=f.vx*dt*2;f.y+=f.vy*dt*2;}});
+    bee.forEach(b=>{b.t+=dt;b.va+=(R()-.5)*dt*6;b.va*=.96;b.a+=b.va*dt;const s=45+Math.sin(b.t*2)*15;b.x+=Math.cos(b.a)*s*dt;b.y+=Math.sin(b.a)*s*dt;if(!inW(b.x,b.y,40)){b.a+=PI*.9;}});
+    // 畫面
+    g.fillStyle='#07090a';g.fillRect(0,0,640,420);
+    g.fillStyle='#3a3a36';g.beginPath();g.ellipse(CX,CY,RX+16,RY+16,0,0,7);g.fill();
+    const gr=g.createRadialGradient(CX,CY,10,CX,CY,Math.max(RX,RY));gr.addColorStop(0,wc[0]);gr.addColorStop(1,wc[1]);g.fillStyle=gr;g.beginPath();g.ellipse(CX,CY,RX,RY,0,0,7);g.fill();
+    g.save();g.beginPath();g.ellipse(CX,CY,RX,RY,0,0,7);g.clip();
+    deb.forEach(d=>{g.save();g.translate(d.x,d.y);g.rotate(d.a);if(d.k==='leaf'){g.fillStyle='rgba(70,52,26,.75)';g.beginPath();g.ellipse(0,0,9*d.s,4*d.s,0,0,7);g.fill();g.strokeStyle='rgba(40,28,14,.7)';g.beginPath();g.moveTo(-9*d.s,0);g.lineTo(9*d.s,0);g.stroke();}else{g.fillStyle='rgba(30,26,20,.7)';g.fillRect(-1.5,-1,3*d.s,2*d.s);}g.restore();});
+    bee.forEach(b=>{g.save();g.translate(b.x,b.y);g.rotate(b.a);g.scale(1.5,1.5);g.globalAlpha=.85;g.strokeStyle='rgba(30,22,14,.9)';g.lineWidth=1.2;for(let k=-1;k<=1;k++){const sw=Math.sin(b.t*12+k)*3;g.beginPath();g.moveTo(k*3,-3);g.lineTo(k*3+sw,-9);g.moveTo(k*3,3);g.lineTo(k*3+sw,9);g.stroke();}
+      g.fillStyle='#2a1e12';g.beginPath();g.ellipse(0,0,7,4.5,0,0,7);g.fill();g.fillStyle='rgba(120,100,70,.5)';g.beginPath();g.ellipse(-1,-1,4,1.5,0,0,7);g.fill();g.fillStyle='#120c08';g.beginPath();g.arc(6.5,0,2.4,0,7);g.fill();g.restore();});
+    lar.forEach(l=>{const sc=1-l.d*.45;g.save();g.translate(l.x,l.y);g.rotate(l.a);g.globalAlpha=.92-l.d*.6;const L=l.len*sc,w=l.st==='dive'?Math.sin(l.t*16)*4.5:Math.sin(l.t*2)*.6;
+      g.strokeStyle='rgba(60,44,28,.95)';g.lineCap='round';g.lineWidth=3.8*sc;g.beginPath();g.moveTo(-L/2,0);for(let i=1;i<=8;i++){const f=i/8;g.lineTo(-L/2+L*f,Math.sin(f*PI*1.5+l.t*16*(l.st==='dive'?1:0))*w);}g.stroke();
+      g.fillStyle='rgba(50,36,22,.95)';g.beginPath();g.ellipse(L/2,0,5*sc,4.2*sc,0,0,7);g.fill();g.restore();});
+    fle.forEach(f=>{g.globalAlpha=.85-f.d*.4;g.fillStyle='rgba(225,210,170,.85)';g.beginPath();g.ellipse(f.x,f.y,3.8,3,Math.atan2(f.vy,f.vx),0,7);g.fill();g.fillStyle='#1a1410';g.fillRect(f.x+1.5,f.y-.8,1.8,1.8);g.globalAlpha=1;});
+    g.restore();
+    g.strokeStyle='rgba(180,180,170,.35)';g.lineWidth=2;g.beginPath();g.ellipse(CX,CY,RX,RY,0,0,7);g.stroke();
+    // 黑暗與手電筒光圈
+    const dk=g.createRadialGradient(px,py,30,px,py,coarse?135:120);dk.addColorStop(0,'rgba(0,0,0,0)');dk.addColorStop(.6,'rgba(0,0,0,.18)');dk.addColorStop(1,'rgba(0,0,0,.955)');g.fillStyle=dk;g.fillRect(0,0,640,420);
+    const hl=g.createRadialGradient(px,py,0,px,py,60);hl.addColorStop(0,'rgba(255,245,215,.16)');hl.addColorStop(1,'rgba(255,245,215,0)');g.fillStyle=hl;g.fillRect(px-60,py-60,120,120);
+    g.fillStyle='rgba(255,255,255,.35)';g.beginPath();g.ellipse(px-14,py-10,9,4,-.4,0,7);g.fill();
+    if(t0<4){g.fillStyle='rgba(224,214,188,.8)';g.font='14px sans-serif';g.fillText(coarse?'手指拖曳＝手電筒的光':'移動游標＝手電筒的光',20,404);}
+  });}
+
 /* ---------- 1. 吸取幼蟲 ---------- */
 /* 手指／游標對應滴管上端的橡皮球，尖端在下方 OFF 像素處 */
 const OFF=195;
@@ -124,7 +181,7 @@ function capture(o,done){const tk=++token;
     g.fillStyle='rgba(255,240,200,.06)';g.beginPath();g.moveTo(240,0);g.lineTo(400,0);g.lineTo(470,460);g.lineTo(170,460);g.fill();
     g.strokeStyle='#4a4a44';g.lineWidth=10;g.beginPath();g.moveTo(box.x0-5,150);g.lineTo(box.x0-5,box.bot+5);g.lineTo(box.x1+5,box.bot+5);g.lineTo(box.x1+5,150);g.stroke();
     if(o.larvae==='aedes'){g.fillStyle='#120c08';for(let i=0;i<34;i++){const yy=SURF-6-((i*37)%40),xx=i%2?box.x0+3:box.x1-7;g.beginPath();g.ellipse(xx+2,yy,2.2,1.2,0,0,7);g.fill();}}
-    ls.forEach(l=>l.pupa?pupa(g,l):larva(g,l));
+    ls.forEach(l=>soft(g,2.6,()=>l.pupa?pupa(g,l):larva(g,l)));
     g.strokeStyle='rgba(200,220,230,.55)';g.lineWidth=1.5;g.beginPath();g.moveTo(box.x0,SURF);for(let x=box.x0;x<=box.x1;x+=8)g.lineTo(x,SURF+Math.sin(x*.05+now*2)*1.2);g.stroke();
     ripples.forEach(r=>{r.r+=dt*60;r.a-=dt*.8;g.strokeStyle=`rgba(200,220,230,${Math.max(0,r.a)})`;g.beginPath();g.ellipse(r.x,SURF,r.r,r.r*.25,0,0,7);g.stroke();});
     for(let i=bubbles.length-1;i>=0;i--){const b=bubbles[i];b.y-=b.v*dt;if(b.y<SURF){bubbles.splice(i,1);continue;}g.strokeStyle='rgba(220,235,240,.6)';g.beginPath();g.arc(b.x,b.y,1.5,0,7);g.stroke();}
@@ -133,7 +190,7 @@ function capture(o,done){const tk=++token;
     const vl=Math.min(100,got*20);g.fillStyle='rgba(40,80,90,.6)';g.fillRect(591,410-vl,38,vl);
     // 滴管與吸進去的幼蟲
     drawPipette(g,tip.x,tip.y,down,Math.min(130,sucked.length*32),false);
-    sucked.forEach((s,i)=>{s.k=Math.min(1,s.k+dt*1.6);const L=s.l;g.save();g.translate(tip.x,tip.y-20-s.k*(18+i*12));g.scale(.22,.22);L.x=0;L.y=0;L.ang=PI/2;L.t+=dt;larva(g,L);g.restore();});
+    sucked.forEach((s,i)=>{s.k=Math.min(1,s.k+dt*1.6);const L=s.l;g.save();g.translate(tip.x,tip.y-20-s.k*(18+i*12));g.scale(.22,.22);L.x=0;L.y=0;L.ang=PI/2;L.t+=dt;soft(g,6,()=>larva(g,L));g.restore();});
     if(demo)drawFinger(g,tip.x,tip.y-OFF,down);else if(coarse&&st.down)drawFinger(g,tip.x,tip.y-OFF,true);
     if(demo&&demo.ph===2){g.fillStyle='#e0b050';g.font='bold 15px sans-serif';g.fillText('按住',tip.x+22,tip.y-OFF);}
     if(t0<4&&!demo){g.fillStyle='rgba(224,214,188,.8)';g.font='13px sans-serif';g.fillText(coarse?'手指按在紅色橡皮球上拖曳':'游標就是紅色橡皮球的位置',20,30);}
@@ -151,12 +208,12 @@ function vial(o,onWrong,done){const tk=++token;
   const ls=[];for(let i=0;i<3;i++){const l=mkLarva(o.larvae,VX0+40+i*60,SURF,92);l.timer=1+i*2;l.state=i===1?'bottom':'hang';if(i===1)l.y=BOT-90;ls.push(l);}
   if(o.pupae){const p=mkLarva(o.larvae,VX0+150,SURF,92);p.pupa=true;ls.push(p);}
   let first=true,solved=false;
-  function scene(now){
+  function scene(now,sharp){
     g.fillStyle='#0a0d0f';g.fillRect(0,0,640,420);
     const bg=g.createRadialGradient(150,180,10,150,180,420);bg.addColorStop(0,'rgba(255,240,210,.18)');bg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=bg;g.fillRect(0,0,640,360);
     const gr=g.createLinearGradient(0,SURF,0,BOT);gr.addColorStop(0,wc[0]);gr.addColorStop(1,wc[1]);g.fillStyle=gr;g.fillRect(VX0,SURF,VX1-VX0,BOT-SURF);
     const lt=g.createLinearGradient(VX0,0,VX1,0);lt.addColorStop(0,'rgba(255,245,220,.22)');lt.addColorStop(.35,'rgba(255,245,220,.04)');lt.addColorStop(1,'rgba(0,0,0,.25)');g.fillStyle=lt;g.fillRect(VX0,SURF,VX1-VX0,BOT-SURF);
-    ls.forEach(l=>l.pupa?pupa(g,l):larva(g,l));
+    ls.forEach(l=>sharp?(l.pupa?pupa(g,l):larva(g,l)):soft(g,2.4,()=>l.pupa?pupa(g,l):larva(g,l)));
     g.strokeStyle='rgba(210,230,236,.6)';g.lineWidth=1.5;g.beginPath();g.moveTo(VX0,SURF+3);g.quadraticCurveTo((VX0+VX1)/2,SURF-2,VX1,SURF+3);g.stroke();
     g.strokeStyle='rgba(225,238,242,.75)';g.lineWidth=3;g.beginPath();g.moveTo(VX0,30);g.lineTo(VX0,BOT+6);g.quadraticCurveTo(VX0,BOT+18,VX0+16,BOT+18);g.lineTo(VX1-16,BOT+18);g.quadraticCurveTo(VX1,BOT+18,VX1,BOT+6);g.lineTo(VX1,30);g.stroke();
     g.fillStyle='rgba(255,255,255,.12)';g.fillRect(VX0+10,40,8,BOT-50);g.fillStyle='#e8e2d0';g.fillRect(VX1-70,BOT-70,56,34);g.fillStyle='#3a3a36';g.font='11px sans-serif';g.fillText(o.label||'樣本',VX1-66,BOT-49);
@@ -170,7 +227,7 @@ function vial(o,onWrong,done){const tk=++token;
       $('idfb').innerHTML='<div class="fb bad">不對。等幼蟲在水面停下來，用放大鏡看呼吸管：斑蚊的短而粗、毛只有一對；家蚊的細長、毛有好幾對。</div>';}
   });
   loop(tk,(dt,now)=>{ls.forEach(l=>stepLarva(l,dt,box));scene(now);
-    if(st.seen&&!st.out){const r=70,z=2.6,lx=st.x-HO,ly=st.y-HO;g.save();g.beginPath();g.arc(lx,ly,r,0,7);g.clip();g.translate(lx,ly);g.scale(z,z);g.translate(-lx,-ly);scene(now);g.restore();
+    if(st.seen&&!st.out){const r=70,z=2.6,lx=st.x-HO,ly=st.y-HO;g.save();g.beginPath();g.arc(lx,ly,r,0,7);g.clip();g.translate(lx,ly);g.scale(z,z);g.translate(-lx,-ly);scene(now,true);g.restore();
       g.strokeStyle='#c9a44e';g.lineWidth=5;g.beginPath();g.arc(lx,ly,r,0,7);g.stroke();g.strokeStyle='rgba(255,255,255,.25)';g.lineWidth=2;g.beginPath();g.arc(lx,ly,r-8,3.6,4.4);g.stroke();
       g.lineCap='round';g.lineWidth=12;g.strokeStyle='#3a2a16';g.beginPath();g.moveTo(lx+r*.72,ly+r*.72);g.lineTo(st.x,st.y);g.stroke();g.lineWidth=8;g.strokeStyle='#6a4e2a';g.beginPath();g.moveTo(lx+r*.74,ly+r*.74);g.lineTo(st.x,st.y);g.stroke();
       if(coarse&&st.down)drawFinger(g,st.x-6,st.y-6,true);}
@@ -245,5 +302,5 @@ function clear(o,onWrong,done){const tk=++token,want=o.clear||'pour',eggs=o.larv
       else{if(f2)onWrong('選了'+({spray:'殺蟲噴霧',bleach:'漂白水'})[b.dataset.v]);f2=false;b.disabled=true;b.classList.add('wrong');$('agfb').innerHTML=`<div class="fb bad">${why[b.dataset.v]} 再選一次。</div>`;}
     });}
 }
-return{capture,vial,clear,stop:()=>token++};
+return{scan,capture,vial,clear,stop:()=>token++};
 })();

@@ -313,22 +313,33 @@ function runBrief(key){
   if(!S.ev[f])pages(B.pages,()=>{S.ev[f]=1;setObj();if(B.after)sub(B.after,5);},B.btn);else menu();
 }
 
+function rollBugs(o){if(!o.water)return{};const r=Math.random;if(o.larvae)return{flea:r()<.4,beetle:r()<.25};if(r()<.75){const f=r()<.65;return{flea:f,beetle:!f||r()<.3};}return{};}
 function inspectItem(id){
   const o=L.ITEMS[id],S=G.S;
   if(S.treated[id]){openPanel(`<div class="step">已記錄</div><h2>${o.name}</h2><p>${o.result}</p><p class="mut">積水：${o.water?'有':'無'}${o.larvae?'　幼蟲：'+(o.larvae==='aedes'?'斑蚊':'家蚊'):''}</p><p class="mut">${o.learn}</p><div class="row"><button class="pri" id="cl">返回</button></div>`);$('cl').onclick=closePanel;return;}
-  openPanel(`<div class="step">發現</div><h2>${o.name}</h2><p>${o.desc}</p><div class="row"><button class="pri" id="bi">用手電筒照，下撈杓</button><button id="cl">先不看</button></div>`);
+  openPanel(`<div class="step">發現</div><h2>${o.name}</h2><p>${o.desc}</p><div class="row"><button class="pri" id="bi">用手電筒照水面</button><button id="cl">先不看</button></div>`);
   $('cl').onclick=closePanel;
   $('bi').onclick=()=>{
     S.log[id]=true;burst(.25,900,.08,'bandpass');setObj();
-    const h=`<div class="step">檢查結果</div><h2>${o.name}</h2><div class="res">${o.result}</div>`;
-    if(o.larvae){
-      $('pn').innerHTML=h+'<div id="fw"></div><div id="act"></div>';
-      const sp=o.larvae==='aedes'?'斑蚊':'家蚊',other=o.larvae==='aedes'?'家蚊':'斑蚊';
-      FW.capture(o,()=>FW.vial(o,()=>mistake('幼蟲辨識',`${o.name}：在玻璃瓶中把${sp}幼蟲認成${other}。`),()=>{tally('幼蟲辨識',1);
+    S.bugs=S.bugs||{};const bugs=S.bugs[id]||(S.bugs[id]=rollBugs(o));
+    const note=(bugs.flea?'水裡有幾隻很小的水蚤，一跳一跳的。':'')+(bugs.beetle?'還有一隻小甲蟲在水裡划來划去。':'');
+    const res=`<div class="step">檢查結果</div><div class="res">${o.result}${note&&!o.larvae?'<br><span class="mut">'+note+'</span>':''}</div>`;
+    const sp=o.larvae==='aedes'?'斑蚊':'家蚊',other=o.larvae==='aedes'?'家蚊':'斑蚊';
+    const sample=()=>FW.capture(o,()=>FW.vial(o,()=>mistake('幼蟲辨識',`${o.name}：在玻璃瓶中把${sp}幼蟲認成${other}。`),()=>{tally('幼蟲辨識',1);
         FW.clear(o,why=>mistake('清除孳生源',`${o.name}：${why}。`),()=>{tally('清除孳生源',1);
           $('pn').classList.remove('game');
           $('fw').innerHTML=`<div class="fb good" style="margin-top:10px">已採樣、鑑定為${sp}幼蟲，並${(o.clear||'pour')==='pour'?'清除積水':'投藥'}。</div>`;actions(true);});}));
-    }else{$('pn').innerHTML=h+'<div id="act"></div>';actions();}
+    if(!o.water){$('pn').innerHTML=`<h2>${o.name}</h2>`+res+'<div id="act"></div>';actions();return;}
+    $('pn').innerHTML=`<h2>${o.name}</h2><div id="fw"></div><div id="act"></div>`;
+    FW.scan(o,bugs,want=>{
+      const has=!!o.larvae;
+      if(want&&has){tally('探照判斷',1);sample();}
+      else if(!want&&!has){tally('探照判斷',1);$('pn').classList.remove('game');$('fw').innerHTML=res+`<div class="fb good">判斷正確，水裡沒有孑孓。${note?'在動的是水蚤或小甲蟲，不是蚊子的幼蟲。':''}</div>`;actions();}
+      else if(!want&&has){mistake('探照判斷',`${o.name}：水裡有孑孓，你判斷成沒有。`);$('pn').classList.remove('game');
+        $('fw').innerHTML=`<div class="fb bad">水裡其實有孑孓。倒吊在水面、受驚會一扭一扭往下鑽的就是。漏看的話，這個容器就會被當成陰性。</div><div class="row"><button class="pri" id="resamp">回去採樣</button></div>`;$('resamp').onclick=sample;}
+      else{mistake('探照判斷',`${o.name}：把${bugs.flea?'水蚤':bugs.beetle?'小甲蟲':'水裡的碎屑'}當成孑孓。`);$('pn').classList.remove('game');
+        $('fw').innerHTML=res+`<div class="fb bad">撈了幾次，沒有撈到孑孓。${bugs.flea?'剛剛一跳一跳的是水蚤，':''}${bugs.beetle?'划來划去的是小甲蟲，':''}${!bugs.flea&&!bugs.beetle?'剛剛看到的只是碎屑，':''}都不是蚊子的幼蟲。</div>`;actions();}
+    });
     function actions(after){
       $('act').innerHTML=`<div class="step">${after?'後續處置與衛教':'處置'}</div><p>${after?'接下來要怎麼做，才不會再積水？':'你會怎麼處理？'}</p><div class="col" id="acts">${o.acts.map((a,k)=>`<button data-k="${k}">${a.t}</button>`).join('')}</div><div id="afb"></div>`;
       let first=true;
@@ -672,7 +683,7 @@ window.DIFF=1;const DIFFS=[{n:'簡單',d:'陽性容器比較少，蚊子也比�
 function levelMenu(){const box=$('levels');box.innerHTML='';Object.keys(LEVELS).forEach(id=>{const l=LEVELS[id],b=document.createElement('button');b.className='pri';b.dataset.level=id;
   b.innerHTML=`<b>${l.name}</b><br><span style="font-size:14px;opacity:.8">${l.blurb}</span>`;b.onclick=()=>diffMenu(id);box.appendChild(b);});}
 function diffMenu(id){const box=$('levels'),l=LEVELS[id];box.innerHTML=`<p class="mut" style="margin:4px 0">${l.name}：選擇難度</p>`;
-  DIFFS.forEach((d,i)=>{const b=document.createElement('button');b.className=i===1?'pri':'';b.dataset.diff=i;b.innerHTML=`<b>${d.n}</b>　<span style="font-size:13px;opacity:.8">${d.d}</span>`;b.style.padding='8px 12px';b.onclick=()=>{window.DIFF=i;levelMenu();startLevel(id);};box.appendChild(b);});
+  DIFFS.forEach((d,i)=>{const b=document.createElement('button');b.dataset.diff=i;b.innerHTML=`<b>${d.n}</b>　<span style="font-size:13px;opacity:.8">${d.d}</span>`;b.style.padding='8px 12px';b.onclick=()=>{window.DIFF=i;levelMenu();startLevel(id);};box.appendChild(b);});
   const bk=document.createElement('button');bk.textContent='返回';bk.onclick=levelMenu;box.appendChild(bk);}
 levelMenu();
 </script>
