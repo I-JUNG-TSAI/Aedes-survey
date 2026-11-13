@@ -168,7 +168,7 @@ function build(K){
   box(2.9,.5,.5,0,2.95,-1.7,MT.steel,nb);
   [[0,3.5,4.2],[-5.6,3.1,3.6],[5.8,3.1,4.4]].forEach(a=>{const m=box(a[2],.06,1.5,a[0],a[1],-1.1,MT.corrRust,nb);m.rotation.x=.22;[-1,1].forEach(s=>{const r=box(.04,.04,1.3,a[0]+s*a[2]*.45,a[1]-.32,-1.2,MT.dark,nb);r.rotation.x=-.5;});});
   [[-5.6,1.6],[5.8,1.6],[-5,4.9],[1,4.9],[6,4.9]].forEach(w=>{box(1.9,1.3,.08,w[0],w[1],-1.83,ph(0x23282c,{shininess:60}),nb);const b=mesh(new THREE.PlaneGeometry(1.9,1.3),MT.bars,w[0],w[1],-1.76);b.material=MT.bars;});
-  box(18,.6,.06,0,.3,-1.82,ph(0xc8c6bc),nb);
+  box(7.85,.6,.06,-5.075,.3,-1.82,ph(0xc8c6bc),nb);box(7.85,.6,.06,5.075,.3,-1.82,ph(0xc8c6bc),nb);
   [-8.6,3.2,8.6].forEach(x=>mesh(new THREE.CylinderGeometry(.05,.05,H,8),MT.white,x,H/2,-1.78));
   {const l=light(0xa8b0c8,.5,10,0,2.4,1.5);}
   // 門口的鐵雕
@@ -189,12 +189,7 @@ function build(K){
    chair(-1.4,-.3,.4);chair(.9,-.5,-.2);chair(1.7,.3,-1.2);const tb=new THREE.Mesh(new THREE.BoxGeometry(1.2,.05,.7),MT.white);tb.position.set(.1,.95,.2);g.add(tb);[[-.5,-.25],[.5,-.25],[-.5,.25],[.5,.25]].forEach(q=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.04,.72,.04),MT.steel);l.position.set(.1+q[0],.58,.2+q[1]);g.add(l);});
    put(g,6.2,0,-.6);scene.remove(g);scene.add(Pr.flatten(g));col.push({x0:3.9,x1:8.5,z0:-1.7,z1:.5,y0:0,y1:1});}
   // 休旅車、腳踏車、推車、梯子
-  {const g=G2(),cm=ph(0xb8ae94,{shininess:60,specular:0x555555}),bk=ph(0x101012,{shininess:80});
-   const a=(geo,m,x,y,z)=>{const q=new THREE.Mesh(geo,m);q.position.set(x,y,z);g.add(q);return q;};
-   a(new THREE.BoxGeometry(1.85,.75,4.3),cm,0,.8,0);a(new THREE.BoxGeometry(1.7,.65,2.7),bk,0,1.5,.3);a(new THREE.BoxGeometry(1.74,.08,2.75),cm,0,1.86,.3);a(new THREE.BoxGeometry(1.9,.2,4.4),ph(0x4a463e),0,.42,0);
-   [[-.93,1.4],[.93,1.4],[-.93,-1.4],[.93,-1.4]].forEach(q=>{a(new THREE.CylinderGeometry(.36,.36,.24,10),bk,q[0],.36,q[1]).rotation.z=PI/2;});
-   a(new THREE.BoxGeometry(.3,.2,.05),new THREE.MeshBasicMaterial({color:0x7a1010}),-.7,.95,2.16);a(new THREE.BoxGeometry(.3,.2,.05),new THREE.MeshBasicMaterial({color:0x7a1010}),.7,.95,2.16);
-   put(g,7.4,0,4.2,-.25);scene.remove(g);scene.add(Pr.flatten(g));g.position.set(7.4,0,4.2);g.rotation.y=-.25;col.push({x0:6.2,x1:8.6,z0:2,z1:6.4,y0:0,y1:1.9});deco(g,'查看：休旅車','車停在這裡很久了，輪胎旁邊長了草。車身沒有會積水的地方。');}
+  {const g=K.carModel(0xb8ae94,{two:true,rails:true,plate:'BKR-5170'});g.position.set(7.4,0,4.2);g.rotation.y=-.25;scene.add(g);col.push({x0:6.2,x1:8.6,z0:2,z1:6.4,y0:0,y1:1.9});deco(g,'查看：休旅車','車停在這裡很久了，輪胎旁邊長了草。車身沒有會積水的地方。');}
   {const g=G2();const bike=(x,z,ry,c)=>{const b=G2(),m=ph(c,{shininess:40});[-.5,.5].forEach(s=>{const w=new THREE.Mesh(new THREE.TorusGeometry(.32,.02,5,16),MT.dark);w.position.set(s,.34,0);b.add(w);});
      [[[-.5,.34,0],[-.1,.75,0]],[[-.1,.75,0],[.4,.8,0]],[[.4,.8,0],[.5,.34,0]],[[-.1,.75,0],[0,.34,0]],[[0,.34,0],[.4,.8,0]],[[.4,.8,0],[.38,1.0,0]],[[-.1,.75,0],[-.14,.9,0]]].forEach(q=>{const A=new THREE.Vector3(...q[0]),B=new THREE.Vector3(...q[1]),t=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,A.distanceTo(B),5),m);t.position.copy(A).add(B).multiplyScalar(.5);t.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize());b.add(t);});
      const sd=new THREE.Mesh(new THREE.BoxGeometry(.22,.05,.12),ph(0x6a4a2a));sd.position.set(-.14,.92,0);b.add(sd);const hb=new THREE.Mesh(new THREE.BoxGeometry(.04,.04,.46),MT.steel);hb.position.set(.38,1.0,0);b.add(hb);b.position.set(x,0,z);b.rotation.y=ry;b.rotation.z=.12;g.add(b);};
@@ -241,13 +236,13 @@ function build(K){
   {const g=G2(),ct=P(tex((g,n)=>{g.fillStyle='#a8865a';g.fillRect(0,0,n,n);for(let i=0;i<400;i++){g.fillStyle=R()<.5?'rgba(80,60,30,.25)':'rgba(220,190,140,.2)';g.fillRect(R()*n,R()*n,1,1);}g.fillStyle='rgba(200,180,140,.7)';g.fillRect(0,n*.45,n,n*.1);g.fillStyle='rgba(40,30,20,.6)';g.font='bold 9px sans-serif';g.fillText('易碎',4,14);}),{},1);
    for(let i=0;i<6;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.6+R()*.3,.35+R()*.2,.45+R()*.2),ct);b.position.set(3.6+R()*4.6,3.48+b.geometry.parameters.height/2,-3.5-R()*11);b.rotation.y=R()*.6;g.add(b);}scene.add(Pr.flatten(g));}
   // 沿牆堆疊的木箱和收藏
-  {const g=G2();let z=-3.4;const tops=[];for(let i=0;i<9;i++){const w=.7+R()*.5,d=.55+R()*.2;let y=0;const n=1+(R()*3|0);for(let k=0;k<n;k++){const h=.32+R()*.3,b=new THREE.Mesh(new THREE.BoxGeometry(d,h,w),R()<.5?MT.woodD:MT.woodL);b.position.set(2.82-d/2-.08-(k?R()*.06:0),y+h/2,z-w/2);g.add(b);
+  {const g=G2();let z=-3.4;const tops=[];for(let i=0;i<9;i++){const w=.7+R()*.5,d=.55+R()*.2;let y=0;if(z>-12.15&&z-w<-10.25)z=-12.15;col.push({x0:2.82-d-.1,x1:2.85,z0:z-w,z1:z,y0:0,y1:1.4});const n=1+(R()*3|0);for(let k=0;k<n;k++){const h=.32+R()*.3,b=new THREE.Mesh(new THREE.BoxGeometry(d,h,w),R()<.5?MT.woodD:MT.woodL);b.position.set(2.82-d/2-.08-(k?R()*.06:0),y+h/2,z-w/2);g.add(b);
        if(R()<.6){const hd=new THREE.Mesh(new THREE.BoxGeometry(.02,.03,.12),MT.dark);hd.position.set(2.82-d-.09,y+h*.5,z-w/2);g.add(hd);}y+=h;}tops.push([2.82-d/2-.08,y,z-w/2]);z-=w+.04;}
-   for(let i=0;i<5;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.5+R()*.3,.3+R()*.2,.6+R()*.4),R()<.5?MT.woodD:MT.woodL);b.position.set(1.5+R()*.3,b.geometry.parameters.height/2,-4-i*2.1);b.rotation.y=(R()-.5)*.4;g.add(b);}
+   for(let i=0;i<5;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.5+R()*.3,.3+R()*.2,.6+R()*.4),R()<.5?MT.woodD:MT.woodL);const bz=-4-i*2.1+(i===3?.8:0)+(i===4?-1:0);b.position.set(1.5+R()*.3,b.geometry.parameters.height/2,bz);col.push({x0:1.2,x1:2.1,z0:bz-.5,z1:bz+.5,y0:0,y1:.6});b.rotation.y=(R()-.5)*.4;g.add(b);}
    tops.forEach((t,i)=>{if(i===4)return;if(i%3===0){const f=new THREE.Mesh(new THREE.BoxGeometry(.04,.5,.6),MT.dark);f.position.set(t[0]+.2,t[1]+.25,t[2]);f.rotation.z=-.15;g.add(f);const pic=new THREE.Mesh(new THREE.PlaneGeometry(.44,.34),ph(0xd8d4c8));pic.rotation.y=-PI/2;pic.position.set(t[0]+.17,t[1]+.25,t[2]);pic.rotation.z=.15;g.add(pic);}
      else if(i%3===1){[0xa83a2a,0x2a4a7a,0x5a6a3a,0xd8c8a0].forEach((c,k)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.2,.035,.28),ph(c));b.position.set(t[0],t[1]+.018+k*.036,t[2]);b.rotation.y=(R()-.5)*.3;g.add(b);});}
      else{const tp=new THREE.Mesh(new THREE.LatheGeometry([V(.001,0),V(.06,0),V(.085,.05),V(.08,.1),V(.045,.13),V(.05,.14),V(.001,.15)],14),ph(0x3a6a5a,{shininess:70}));tp.position.set(t[0],t[1],t[2]);g.add(tp);const sp=new THREE.Mesh(new THREE.CylinderGeometry(.01,.016,.1,6),ph(0x3a6a5a));sp.rotation.x=.9;sp.position.set(t[0],t[1]+.08,t[2]+.1);g.add(sp);}});
-   scene.add(Pr.flatten(g));col.push({x0:1.2,x1:2.85,z0:-14.6,z1:-3.2,y0:0,y1:1.4});
+   scene.add(Pr.flatten(g));
    const t=tops[4],jg=G2(),clay=ph(0x5a4234,{shininess:30});[[0,0,1],[.05,-.3,.75]].forEach(q=>{const j=new THREE.Mesh(new THREE.LatheGeometry([V(.001,0),V(.07,0),V(.15,.1),V(.16,.2),V(.1,.3),V(.06,.34),V(.075,.37),V(.055,.37),V(.05,.33)],14),clay);j.scale.setScalar(q[2]);j.position.set(q[0],0,q[1]);jg.add(j);});
    addItem('W4',jg,t[0],t[1],t[2],0);}
   // 靠牆的畫布、畫架、洗筆桶
@@ -451,7 +446,7 @@ function build(K){
      const dx=D.tx-g.position.x,dz=D.tz-g.position.z,d=Math.hypot(dx,dz);if(d>.05){const s=Math.min(d,.12);g.position.x+=dx/d*s;g.position.z+=dz/d*s;}
      const ang=Math.atan2(p.x-g.position.x,p.z-g.position.z);let dr=ang-g.rotation.y;while(dr>PI)dr-=PI*2;while(dr<-PI)dr+=PI*2;g.rotation.y+=dr*.2;
      if(D.state==='bark'){const b=Math.sin(t*15);hd.rotation.x=b>.3?-.35:.05;g.position.y=Math.max(0,Math.sin(t*7.5))*.05;tl.rotation.x=1.1;
-       if(t-D.bark>.42+R()*.3){D.bark=t;K.burst(.09,620+R()*120,.3,'bandpass');setTimeout(()=>K.burst(.07,520,.22,'bandpass'),110);}}
+       if(t-D.bark>.5+R()*.35){D.bark=t;K.bark(.55,1,1.8);if(R()<.6)setTimeout(()=>K.bark(.45,1.06,2.2),190+R()*60);if(R()<.25)setTimeout(()=>K.growl(.6,.3),420);}}
      else{hd.rotation.x=.1;g.position.y=0;tl.rotation.x=.4+Math.sin(t*9)*.25;}});
    deco(g,'查看：狗','黑色的米克斯，脖子上有項圈。牠一直盯著你。');}
   // 空屋房間裡的第二隻狗：玩家進門時從黑暗中衝出去
@@ -462,7 +457,7 @@ function build(K){
      g.scale.y=1;if(D2.wait>0){D2.wait-=dt;U.hd.rotation.x=Math.sin(t*18)>.2?-.4:.05;g.position.y=Math.abs(Math.sin(t*9))*.04;return;}const q=path[D2.i],dx=q[0]-g.position.x,dz=q[1]-g.position.z,d=Math.hypot(dx,dz),sp=11*dt;
      if(d<=sp){g.position.x=q[0];g.position.z=q[1];D2.i++;}else{g.position.x+=dx/d*sp;g.position.z+=dz/d*sp;}
      g.rotation.y=Math.atan2(dx,dz);g.position.y=Math.abs(Math.sin(t*22))*.09;U.legs.forEach((l,k)=>l.rotation.x=Math.sin(t*22+(k%2?0:PI))*.9);U.hd.rotation.x=Math.sin(t*15)>.2?-.35:.05;
-     if(t-(D2.bk||0)>.28){D2.bk=t;K.burst(.08,700+R()*200,.4,'bandpass');}});}
+     if(t-(D2.bk||0)>.3){D2.bk=t;K.bark(.6,1.25,2.6);}});}
   {const f=person(-13.6,-50,-.7,.92,LOOKS.F,'F','交談：餵狗的阿姨');f.visible=false;f.rotation.y=.4;K.unblock('npcF');}
   light(0x8a7a9a,.35,8,-16,2.4,-5);
 
@@ -505,8 +500,8 @@ LEVELS.studio={id:'studio',name:'第二關　藝術家的工寮',blurb:'巷子�
  tick(K,dt,p){const G=K.G,S=G.S,e=S.ev;
   if(e.dogAway&&(p.z>3||p.x<-19.8||p.x>-11.8)){e.dogAway=0;K.sub('（狗還在鐵門後面盯著你。）',3);}
   if(!e.dog&&!e.dogAway&&!e.dogBusy&&!S.unlocked.D&&p.z<1.6&&p.x>-19&&p.x<-12.6){e.dog=1;dogEvent(K);}
-  if(!e.growl&&!e.dog&&p.x<-8&&p.z<5){e.growl=1;K.burst(.5,120,.25);K.sub('（左邊的空屋裡有低低的吼聲。）',3.5);}
-  if(!e.dog2&&S.unlocked.D&&p.x>-21&&p.x<-14.2&&p.z<-8.5){e.dog2=1;const D2=G.dog2;D2.run=1;D2.wait=.25;K.burst(.25,180,.6);K.burst(.15,900,.45,'bandpass');
+  if(!e.growl&&!e.dog&&p.x<-8&&p.z<5){e.growl=1;K.growl(1.6,.4);K.sub('（左邊的空屋裡有低低的吼聲。）',3.5);}
+  if(!e.dog2&&S.unlocked.D&&p.x>-21&&p.x<-14.2&&p.z<-8.5){e.dog2=1;const D2=G.dog2;D2.run=1;D2.wait=.25;K.burst(.25,180,.6);K.growl(.4,.5);setTimeout(()=>K.bark(.75,1.2,3),120);
     G.shake=.6;K.sub('（黑暗裡有東西撞開空桶，從你腳邊衝了出去！）',3.5);K.sub('餵狗的阿姨：「啊，還有一隻在裡面，牠很怕人啦。」',5);}
   if(G.shake>0){G.shake-=dt;G.camera.position.x+=(Math.random()-.5)*G.shake*.06;}
   if(!e.inW&&p.z<-3&&p.x>-9&&p.x<9){e.inW=1;K.sub('（工作室裡很暗。到處是木箱，還有蓋著布的東西。）',4);K.sub('學長：「箱子上的東西不要碰。先找會裝水的。」',4.5,true);}

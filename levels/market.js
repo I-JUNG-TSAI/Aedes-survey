@@ -219,10 +219,7 @@ LEVELS.market={id:'market',name:'第一關　廢棄市場與民宅調查',blurb:
   {const l=new THREE.PointLight(0x8a7a9a,.8,15,1.5);l.position.set(4,2.7,-1.2);scene.add(l);}
   sign(['社區環境','大家維持','乾淨整潔','共享共榮'],'#e8e8e0','#2a4a9a',.9,1.2,6.83,2.1,-2,-Math.PI/2,40);
   // 車
-  {const g=new THREE.Group();mesh(new THREE.BoxGeometry(1.8,.7,4.2),C(0xcfd0cc),0,.7,0,g);mesh(new THREE.BoxGeometry(1.6,.55,2.2),C(0x1c2024),0,1.3,-.2,g);mesh(new THREE.BoxGeometry(1.62,.08,2.24),C(0xcfd0cc),0,1.6,-.2,g);
-   [[-.9,1.3],[.9,1.3],[-.9,-1.3],[.9,-1.3]].forEach(p=>{mesh(new THREE.CylinderGeometry(.32,.32,.2,8),C(0x101010),p[0],.32,p[1],g).rotation.z=Math.PI/2;});
-   mesh(new THREE.BoxGeometry(.4,.16,.05),B(0x7a1010),-.6,.85,2.11,g);mesh(new THREE.BoxGeometry(.4,.16,.05),B(0x7a1010),.6,.85,2.11,g);
-   g.position.set(4.9,0,-8.5);scene.add(g);col.push({x0:4,x1:5.8,z0:-10.6,z1:-6.4,y0:0,y1:1.7});deco(g,'查看：汽車','有人把收掉的市場當成停車場。車頂積了一層灰，很久沒動過了。');}
+  {const g=K.carModel(0xc8cac6,{plate:'AJT-0381'});g.traverse(o=>{if(o.isMesh&&o.material.color&&o.material.color.getHex()===0xc8cac6){o.material=o.material.clone();o.material.color.setHex(0xa8aaa6);}});g.position.set(4.9,0,-8.5);scene.add(g);col.push({x0:4,x1:5.8,z0:-10.6,z1:-6.4,y0:0,y1:1.7});deco(g,'查看：汽車','有人把收掉的市場當成停車場。車頂積了一層灰，很久沒動過了。');}
   // 攤台上的雜物
   HD.sofa(-2.4,.88,-4.75,0);HD.cabinet(-1,.88,-12.6,0);
   {const g=new THREE.Group();HD.add(HD.rbox(1.6,.5,.5,.04),HD.MT.dark,g,0,.25,0);HD.add(new THREE.BoxGeometry(1.4,.3,.01),C(0x2a2a2c),g,0,.25,.255);g.position.set(-3.2,.88,-13);scene.add(g);
@@ -272,7 +269,7 @@ LEVELS.market={id:'market',name:'第一關　廢棄市場與民宅調查',blurb:
   {const g=new THREE.Group();mesh(new THREE.BoxGeometry(.6,.02,9),M.foul,0,.015,0,g);for(let i=0;i<9;i++){if(i===2||i===3||i===6)continue;mesh(new THREE.BoxGeometry(.64,.04,.9),M.metal,0,.04,-4+i,g);}
    addItem('M7',g,6.42,0,-16.5,0);}
   // 機車、往二樓指示
-  [[-7,-1.2],[-6,-1.2]].forEach(p=>{const s=new THREE.Group();mesh(new THREE.BoxGeometry(.4,.5,1.3),C(0x22262a),0,.6,0,s);mesh(new THREE.BoxGeometry(.3,.5,.3),C(0x0c0c0c),0,.27,.5,s);mesh(new THREE.BoxGeometry(.3,.5,.3),C(0x0c0c0c),0,.27,-.5,s);s.position.set(p[0],0,p[1]);scene.add(s);col.push({x0:p[0]-.3,x1:p[0]+.3,z0:p[1]-.7,z1:p[1]+.7,y0:0,y1:1.2});});
+  [[-7,-1.2,0x8a2a2a,.06],[-6,-1.2,0x2a3a5a,-.05]].forEach(p=>{const sc=K.scooterModel(p[2],{plate:p[2]===0x8a2a2a?'NQX-215':'LTR-887',lean:p[3]});sc.position.set(p[0],0,p[1]);sc.rotation.y=Math.PI;scene.add(sc);col.push({x0:p[0]-.3,x1:p[0]+.3,z0:p[1]-.7,z1:p[1]+.7,y0:0,y1:1.2});});
   sign(['2F 住家','→'],'#1c2a3a','#c8d0d8',.9,.6,6.83,2.6,-23.4,-Math.PI/2,48);
 
   /* ===== 樓梯間 1→2 ===== */
