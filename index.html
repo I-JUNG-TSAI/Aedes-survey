@@ -153,7 +153,7 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webk
   <p class="mut">在每個地點：先取得同意，找出所有積水容器，辨識幼蟲是斑蚊還是家蚊，選擇正確的處置，最後回到機車回報。</p>
   <div class="col" id="levels"></div>
   <p class="mut" id="ctrlHelp" style="margin-top:12px"><kbd>WASD</kbd> 移動　<kbd>滑鼠</kbd> 轉向（不能鎖定滑鼠時，按住拖曳或用 <kbd>←</kbd><kbd>→</kbd>）　<kbd>E</kbd> 互動　<kbd>F</kbd> 手電筒　<kbd>M</kbd> 手冊</p>
-  <div class="row"><button id="btnMan0" style="text-align:center">先看調查手冊</button></div>
+  <div class="row"><button id="btnMan0" style="text-align:center">先看調查手冊</button><button id="btnSnd0" style="text-align:center">聲音設定</button></div>
   <p class="mut" id="loadErr" style="color:#e0a9a2"></p>
 </div></div>
 <div class="ov" id="panel"><div class="pn" id="pn"></div></div>
@@ -195,27 +195,35 @@ let L=null,G=null,renderer=null,AC=null,whineG=null,paused=true,started=false,lo
 const keys={};
 function newState(){return{log:{},treated:{},unlocked:{},mistakes:[],ans:{},hp:100,san:100,bites:0,bite:0,t:0,firstBite:false,formDone:false,ev:{}};}
 /* ================= 音效 ================= */
+let MUSIC=null,SFX=null;const VOL=(()=>{try{return Object.assign({music:.8,sfx:1},JSON.parse(localStorage.getItem('aedesVol')||'{}'));}catch(e){return{music:.8,sfx:1};}})();
+function setVol(k,v){VOL[k]=v;try{localStorage.setItem('aedesVol',JSON.stringify(VOL));}catch(e){}const n=k==='music'?MUSIC:SFX;if(n&&AC)try{n.gain.setTargetAtTime(v,AC.currentTime,.05);}catch(e){n.gain.value=v;}}
+function soundHTML(){const row=(k,label,hint)=>`<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;align-items:center"><b>${label}</b><span class="mut" id="v_${k}">${Math.round(VOL[k]*100)}%</span></div>
+   <input type="range" min="0" max="100" step="5" value="${Math.round(VOL[k]*100)}" data-k="${k}" style="width:100%;accent-color:#b58a3c">
+   <div class="row" style="margin-top:4px"><button data-mute="${k}" style="padding:6px 14px;flex:0 0 auto">${VOL[k]>0?'靜音':'取消靜音'}</button><span class="mut" style="font-size:12.5px;align-self:center">${hint}</span></div></div>`;
+  return `<h3>聲音</h3>${row('music','背景音樂','低沉的環境聲')}${row('sfx','遊戲音效','蚊子、狗叫、腳步聲、提示音')}<p class="mut" style="font-size:12.5px">設定會保留在這台裝置上。</p>`;}
+function bindSound(root){root.querySelectorAll('input[type=range]').forEach(r=>r.oninput=()=>{const k=r.dataset.k,v=r.value/100;setVol(k,v);$('v_'+k).textContent=r.value+'%';const b=root.querySelector(`[data-mute="${k}"]`);b.textContent=v>0?'靜音':'取消靜音';});
+  root.querySelectorAll('[data-mute]').forEach(b=>b.onclick=()=>{const k=b.dataset.mute,r=root.querySelector(`input[data-k="${k}"]`);const v=VOL[k]>0?0:(k==='music'?.8:1);VOL['_'+k]=VOL[k];setVol(k,v);r.value=Math.round(v*100);$('v_'+k).textContent=r.value+'%';b.textContent=v>0?'靜音':'取消靜音';if(v>0&&!AC)initAudio();});}
 function initAudio(){ if(AC) return; try{
   AC=new (window.AudioContext||window.webkitAudioContext)();
   const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=180;
-  const dg=AC.createGain();dg.gain.value=.11;lp.connect(dg);dg.connect(AC.destination);
+  const dg=AC.createGain();dg.gain.value=.11;lp.connect(dg);MUSIC=AC.createGain();MUSIC.gain.value=VOL.music;MUSIC.connect(AC.destination);SFX=AC.createGain();SFX.gain.value=VOL.sfx;SFX.connect(AC.destination);dg.connect(MUSIC);
   [49,52.3,98.4].forEach((f,i)=>{const o=AC.createOscillator();o.type=i?'sawtooth':'sine';o.frequency.value=f;o.connect(lp);o.start();});
   const w=AC.createOscillator();w.type='sawtooth';w.frequency.value=610;
   const l=AC.createOscillator();l.frequency.value=11;const lg=AC.createGain();lg.gain.value=38;l.connect(lg);lg.connect(w.frequency);
   const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1200;bp.Q.value=2;
-  whineG=AC.createGain();whineG.gain.value=0;w.connect(bp);bp.connect(whineG);whineG.connect(AC.destination);w.start();l.start();
+  whineG=AC.createGain();whineG.gain.value=0;w.connect(bp);bp.connect(whineG);whineG.connect(SFX);w.start();l.start();
  }catch(e){AC=null;} }
 function burst(dur,freq,vol,type){ if(!AC) return; try{
   const n=AC.sampleRate*dur,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);
   for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);
   const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type=type||'lowpass';f.frequency.value=freq;
-  const g=AC.createGain();g.gain.value=vol;s.connect(f);f.connect(g);g.connect(AC.destination);s.start();}catch(e){} }
+  const g=AC.createGain();g.gain.value=vol;s.connect(f);f.connect(g);g.connect(SFX);s.start();}catch(e){} }
 /* 狗叫：鋸齒波快速下滑的音高 + 共振峰濾波 + 失真，再疊一層氣音；聽起來接近真的狗吠，又帶一點機械的粗糙感 */
 let distCurve=null;
 function dogBark(vol,pitch,dist){ if(!AC) return; try{
   const t=AC.currentTime,p=(pitch||1)*(0.92+Math.random()*.16),v=vol||.5;
   if(!distCurve){distCurve=new Float32Array(1024);for(let i=0;i<1024;i++){const x=i/512-1;distCurve[i]=Math.tanh(x*4.5);}}
-  const out=AC.createGain();out.gain.value=v;out.connect(AC.destination);
+  const out=AC.createGain();out.gain.value=v;out.connect(SFX);
   const ws=AC.createWaveShaper();ws.curve=distCurve;ws.oversample='2x';
   const pre=AC.createGain();pre.gain.value=dist||1.6;
   const env=AC.createGain();env.gain.setValueAtTime(0,t);env.gain.linearRampToValueAtTime(1,t+.012);env.gain.exponentialRampToValueAtTime(.35,t+.07);env.gain.exponentialRampToValueAtTime(.001,t+.22);
@@ -237,9 +245,9 @@ function dogGrowl(dur,vol){ if(!AC) return; try{
   const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=420;f.Q.value=4;const f2=AC.createBiquadFilter();f2.type='peaking';f2.frequency.value=260;f2.gain.value=10;
   if(!distCurve){distCurve=new Float32Array(1024);for(let i=0;i<1024;i++){const x=i/512-1;distCurve[i]=Math.tanh(x*4.5);}}
   const ws=AC.createWaveShaper();ws.curve=distCurve;const out=AC.createGain();out.gain.value=v;
-  o.connect(ws);ws.connect(f);f.connect(f2);f2.connect(env);env.connect(out);out.connect(AC.destination);o.start(t);am.start(t);o.stop(t+d+.05);am.stop(t+d+.05);
+  o.connect(ws);ws.connect(f);f.connect(f2);f2.connect(env);env.connect(out);out.connect(SFX);o.start(t);am.start(t);o.stop(t+d+.05);am.stop(t+d+.05);
  }catch(e){} }
-function beep(){ if(!AC) return; try{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=880;g.gain.value=.03;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.08);burst(.25,3000,.04,'highpass');}catch(e){} }
+function beep(){ if(!AC) return; try{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=880;g.gain.value=.03;o.connect(g);g.connect(SFX);o.start();o.stop(AC.currentTime+.08);burst(.25,3000,.04,'highpass');}catch(e){} }
 
 
 /* ================= 字幕 / HUD ================= */
@@ -414,15 +422,16 @@ function ending(){
   $('rs').onclick=()=>startLevel(L.id);
   $('mn').onclick=showTitle;
 }
-function manual(){
+function manual(tab){
   openPanel(`<h2>調查手冊</h2>
-  <div class="row" id="mtabs" style="margin-bottom:8px"><button class="pri" data-t="0">調查資訊</button><button data-t="1">陽性容器與探照</button></div>
+  <div class="row" id="mtabs" style="margin-bottom:8px"><button class="pri" data-t="0">調查資訊</button><button data-t="1">陽性容器與探照</button><button data-t="2">聲音設定</button></div>
   <div id="mt0"><h3>斑蚊與家蚊幼蟲</h3><div class="cmp"><div><div class="lv">${larvaSVG('aedes',true)}</div><p class="mut">斑蚊</p></div><div><div class="lv">${larvaSVG('culex',true)}</div><p class="mut">家蚊</p></div></div>
   <table><tr><th></th><th>斑蚊</th><th>家蚊</th></tr><tr><td>呼吸管</td><td>短而粗</td><td>細長</td></tr><tr><td>呼吸管毛</td><td>1 對</td><td>多對</td></tr><tr><td>常見的水</td><td>較乾淨的積水：花瓶、底盤、水桶、輪胎、地下室</td><td>有機質多的污水：水溝、污水桶</td></tr><tr><td>卵</td><td>一顆一顆黏在水面上方的容器壁，耐乾燥</td><td>黏成一團卵塊浮在水面</td></tr><tr><td>傳播登革熱</td><td>會</td><td>不會</td></tr></table>
   <h3>處置：巡、倒、清、刷</h3><p>巡視室內外；倒掉積水；清除不用的容器；刷洗容器內壁去除卵。還要用的儲水容器加蓋。無法清除的大面積積水由防疫人員投藥，並通報管理單位。</p>
   <h3>指數</h3><p>住宅指數＝斑蚊陽性戶數÷調查戶數×100%<br>容器指數＝斑蚊陽性容器數÷積水容器數×100%<br>布氏指數＝斑蚊陽性容器數÷調查戶數×100</p>
   <h3>溝通</h3><p>表明身分與目的；先回應對方的顧慮；尊重對方的權責和使用需求；邀請一起檢查；罰則是最後手段。</p>
   </div>
+  <div id="mt2" style="display:none">${soundHTML()}</div>
   <div id="mt1" style="display:none">
   <h3>陽性容器常見的樣子</h3>
   <ul style="margin:4px 0 8px 18px;padding:0;line-height:1.6">
@@ -441,7 +450,7 @@ function manual(){
   <p>光圈<b>慢慢</b>移動；移太快，孑孓會躲到水底。看到有東西倒吊在水面不動，<b>停下來多看幾秒</b>，看牠會不會扭動。邊緣和角落也要照到。沒看到孑孓，但看到一跳一跳或划來划去的，是水蚤或甲蟲。</p>
   </div>
   <div class="row"><button class="pri" id="cl">關閉</button></div>`);
-  const tabs=[...document.querySelectorAll('#mtabs button')];tabs.forEach(b=>b.onclick=()=>{tabs.forEach(x=>x.classList.toggle('pri',x===b));$('mt0').style.display=b.dataset.t==='0'?'':'none';$('mt1').style.display=b.dataset.t==='1'?'':'none';});
+  const tabs=[...document.querySelectorAll('#mtabs button')];tabs.forEach(b=>b.onclick=()=>{tabs.forEach(x=>x.classList.toggle('pri',x===b));['0','1','2'].forEach(k=>$('mt'+k).style.display=b.dataset.t===k?'':'none');});bindSound($('mt2'));if(tab)tabs[tab].click();
   const cvs=[...document.querySelectorAll('#mlv canvas')],t0=performance.now();
   (function anim(now){if(!$('mlv')||!$('panel').classList.contains('open'))return;const t=(now-t0)/1000;cvs.forEach(c=>manualDraw(c.getContext('2d'),c.dataset.k,t));requestAnimationFrame(anim);})(t0);
   $('cl').onclick=()=>{ if(started)closePanel(); else $('panel').classList.remove('open'); };
@@ -716,7 +725,7 @@ function startLevel2(id){
     if(!looping){looping=true;requestAnimationFrame(frame);}$('loadErr').textContent='';$('loadErr').style.color='#e0a9a2';
   }catch(err){$('loadErr').textContent='無法啟動 3D 畫面（這個瀏覽器可能不支援 WebGL）：'+err.message;console.error(err);}
 }
-$('btnMan0').onclick=manual;
+$('btnMan0').onclick=()=>manual();$('btnSnd0').onclick=()=>manual(2);
 window.DIFF=1;const DIFFS=[{n:'簡單',d:'陽性容器比較少，蚊子也比較少'},{n:'普通',d:'一般的調查狀況'},{n:'困難',d:'陽性容器很多，蚊子到處都是'}];
 function levelMenu(){const box=$('levels');box.innerHTML='';Object.keys(LEVELS).forEach(id=>{const l=LEVELS[id],b=document.createElement('button');b.className='pri';b.dataset.level=id;
   b.innerHTML=`<b>${l.name}</b><br><span style="font-size:14px;opacity:.8">${l.blurb}</span>`;b.onclick=()=>diffMenu(id);box.appendChild(b);});}

@@ -51,9 +51,17 @@ function scare(ls,x,y,r){ls.forEach(l=>{const cx=l.x+Math.cos(l.ang)*l.L*.5,cy=l
 function waterCol(o){return o.larvae==='culex'?['#2e3218','#1a1c0c']:o.algae?['#3a4a1c','#1e2a10']:['#1e3a44','#0e2028'];}
 
 /* 模糊繪製：支援 canvas filter 的瀏覽器直接模糊，否則用多次錯位繪製模擬 */
-const CANF=(()=>{try{const c=document.createElement('canvas').getContext('2d');c.filter='blur(2px)';return c.filter==='blur(2px)';}catch(e){return false;}})();
-function soft(g,px,fn){if(CANF){const f=g.filter;g.filter=`blur(${px}px)`;fn();g.filter=f;}
-  else{const a=g.globalAlpha;g.globalAlpha=a*.32;[[-px*.8,0],[px*.8,0],[0,-px*.8],[0,px*.8]].forEach(o=>{g.save();g.translate(o[0],o[1]);fn();g.restore();});g.globalAlpha=a*.3;fn();g.globalAlpha=a;}}
+/* 模糊繪製。先實際畫一個點測試 canvas filter 是否真的有效（iOS Safari 會接受這個屬性但不套用），
+   不支援時改用低解析度的暫存畫布繪製再放大，一樣有模糊效果 */
+const CANF=(()=>{try{const c=document.createElement('canvas');c.width=c.height=11;const g=c.getContext('2d');g.filter='blur(2px)';g.fillStyle='#fff';g.fillRect(5,5,1,1);return g.getImageData(2,5,1,1).data[3]>0;}catch(e){return false;}})();
+let SOFT=null;
+function soft(g,px,fn){
+  if(CANF){const f=g.filter;g.filter=`blur(${px}px)`;fn(g);g.filter=f;return;}
+  const W=g.canvas.width,H=g.canvas.height,k=Math.max(.1,Math.min(.4,.6/px));
+  if(!SOFT)SOFT=document.createElement('canvas');const w=Math.ceil(W*k),h=Math.ceil(H*k);if(SOFT.width!==w||SOFT.height!==h){SOFT.width=w;SOFT.height=h;}
+  const o=SOFT.getContext('2d'),T=g.getTransform();o.setTransform(1,0,0,1,0,0);o.clearRect(0,0,w,h);o.globalAlpha=g.globalAlpha;
+  o.setTransform(T.a*k,T.b*k,T.c*k,T.d*k,T.e*k,T.f*k);fn(o);
+  g.save();g.setTransform(1,0,0,1,0,0);g.imageSmoothingEnabled=true;g.globalAlpha=1;g.drawImage(SOFT,0,0,w,h,0,0,W,H);g.restore();}
 
 /* ---------- 0. 探照：俯視水面，用手電筒找有沒有東西在動 ---------- */
 function scan(o,bugs,done){const tk=++token;
@@ -195,7 +203,7 @@ function capture(o,done){const tk=++token;
     g.fillStyle='rgba(255,240,200,.06)';g.beginPath();g.moveTo(240,0);g.lineTo(400,0);g.lineTo(470,460);g.lineTo(170,460);g.fill();
     g.strokeStyle='#4a4a44';g.lineWidth=10;g.beginPath();g.moveTo(box.x0-5,150);g.lineTo(box.x0-5,box.bot+5);g.lineTo(box.x1+5,box.bot+5);g.lineTo(box.x1+5,150);g.stroke();
     if(o.larvae==='aedes'){g.fillStyle='#120c08';for(let i=0;i<34;i++){const yy=SURF-6-((i*37)%40),xx=i%2?box.x0+3:box.x1-7;g.beginPath();g.ellipse(xx+2,yy,2.2,1.2,0,0,7);g.fill();}}
-    ls.forEach(l=>soft(g,2.6,()=>l.pupa?pupa(g,l):larva(g,l)));
+    soft(g,2.6,c=>ls.forEach(l=>l.pupa?pupa(c,l):larva(c,l)));
     g.strokeStyle='rgba(200,220,230,.55)';g.lineWidth=1.5;g.beginPath();g.moveTo(box.x0,SURF);for(let x=box.x0;x<=box.x1;x+=8)g.lineTo(x,SURF+Math.sin(x*.05+now*2)*1.2);g.stroke();
     ripples.forEach(r=>{r.r+=dt*60;r.a-=dt*.8;g.strokeStyle=`rgba(200,220,230,${Math.max(0,r.a)})`;g.beginPath();g.ellipse(r.x,SURF,r.r,r.r*.25,0,0,7);g.stroke();});
     for(let i=bubbles.length-1;i>=0;i--){const b=bubbles[i];b.y-=b.v*dt;if(b.y<SURF){bubbles.splice(i,1);continue;}g.strokeStyle='rgba(220,235,240,.6)';g.beginPath();g.arc(b.x,b.y,1.5,0,7);g.stroke();}
@@ -204,7 +212,7 @@ function capture(o,done){const tk=++token;
     const vl=Math.min(100,got*20);g.fillStyle='rgba(40,80,90,.6)';g.fillRect(591,410-vl,38,vl);
     // 滴管與吸進去的幼蟲
     drawPipette(g,tip.x,tip.y,down,Math.min(130,sucked.length*32),false);
-    sucked.forEach((s,i)=>{s.k=Math.min(1,s.k+dt*1.6);const L=s.l;g.save();g.translate(tip.x,tip.y-20-s.k*(18+i*12));g.scale(.22,.22);L.x=0;L.y=0;L.ang=PI/2;L.t+=dt;soft(g,6,()=>larva(g,L));g.restore();});
+    sucked.forEach((s,i)=>{s.k=Math.min(1,s.k+dt*1.6);const L=s.l;g.save();g.translate(tip.x,tip.y-20-s.k*(18+i*12));g.scale(.22,.22);L.x=0;L.y=0;L.ang=PI/2;L.t+=dt;soft(g,6,c=>larva(c,L));g.restore();});
     if(demo)drawFinger(g,tip.x,tip.y-OFF,down);else if(coarse&&st.down)drawFinger(g,tip.x,tip.y-OFF,true);
     if(demo&&demo.ph===2){g.fillStyle='#e0b050';g.font='bold 15px sans-serif';g.fillText('按住',tip.x+22,tip.y-OFF);}
     if(t0<4&&!demo){g.fillStyle='rgba(224,214,188,.8)';g.font='13px sans-serif';g.fillText(coarse?'手指按在紅色橡皮球上拖曳':'游標就是紅色橡皮球的位置',20,30);}
@@ -227,7 +235,7 @@ function vial(o,onWrong,done){const tk=++token;
     const bg=g.createRadialGradient(150,180,10,150,180,420);bg.addColorStop(0,'rgba(255,240,210,.18)');bg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=bg;g.fillRect(0,0,640,360);
     const gr=g.createLinearGradient(0,SURF,0,BOT);gr.addColorStop(0,wc[0]);gr.addColorStop(1,wc[1]);g.fillStyle=gr;g.fillRect(VX0,SURF,VX1-VX0,BOT-SURF);
     const lt=g.createLinearGradient(VX0,0,VX1,0);lt.addColorStop(0,'rgba(255,245,220,.22)');lt.addColorStop(.35,'rgba(255,245,220,.04)');lt.addColorStop(1,'rgba(0,0,0,.25)');g.fillStyle=lt;g.fillRect(VX0,SURF,VX1-VX0,BOT-SURF);
-    ls.forEach(l=>sharp?(l.pupa?pupa(g,l):larva(g,l)):soft(g,2.4,()=>l.pupa?pupa(g,l):larva(g,l)));
+    if(sharp)ls.forEach(l=>l.pupa?pupa(g,l):larva(g,l));else soft(g,2.4,c=>ls.forEach(l=>l.pupa?pupa(c,l):larva(c,l)));
     g.strokeStyle='rgba(210,230,236,.6)';g.lineWidth=1.5;g.beginPath();g.moveTo(VX0,SURF+3);g.quadraticCurveTo((VX0+VX1)/2,SURF-2,VX1,SURF+3);g.stroke();
     g.strokeStyle='rgba(225,238,242,.75)';g.lineWidth=3;g.beginPath();g.moveTo(VX0,30);g.lineTo(VX0,BOT+6);g.quadraticCurveTo(VX0,BOT+18,VX0+16,BOT+18);g.lineTo(VX1-16,BOT+18);g.quadraticCurveTo(VX1,BOT+18,VX1,BOT+6);g.lineTo(VX1,30);g.stroke();
     g.fillStyle='rgba(255,255,255,.12)';g.fillRect(VX0+10,40,8,BOT-50);g.fillStyle='#e8e2d0';g.fillRect(VX1-70,BOT-70,56,34);g.fillStyle='#3a3a36';g.font='11px sans-serif';g.fillText(o.label||'樣本',VX1-66,BOT-49);
