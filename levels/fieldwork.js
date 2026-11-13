@@ -44,7 +44,9 @@ function stepLarva(l,dt,box){l.t+=dt;const hang=PI/2-SP[l.sp].hang*Math.sign(Mat
   else if(l.state==='dive'){l.amp=1.1;l.y+=(90+R()*50)*dt;l.ang+=(PI/2+Math.sin(l.t*9)*.5-l.ang)*dt*6;l.x+=Math.sin(l.t*11)*dt*40;if(l.y>box.bot-l.L*.95){l.state='bottom';l.timer=1.2+R()*2.4;}}
   else if(l.state==='bottom'){l.amp=.35;l.x+=Math.sin(l.t*1.3)*dt*12;l.ang+=(PI*.1*Math.sin(l.t*.5)+PI/2-l.ang)*dt;l.timer-=dt;if(l.timer<0)l.state='rise';}
   else if(l.state==='rise'){l.amp=.75;l.y-=(38+R()*24)*dt;l.ang+=(PI/2-l.ang)*dt*3;if(l.y<=l.surf){l.y=l.surf;l.state='hang';l.timer=2+R()*5;}}
-  l.x=Math.max(box.x0+l.L*.3,Math.min(box.x1-l.L*.3,l.x));}
+  l.x=Math.max(box.x0+l.L*.3,Math.min(box.x1-l.L*.3,l.x));
+  // 身體（含頭部與口刷）往下延伸約 1.15 倍體長，不讓牠超出容器底部
+  const reach=l.L*(Math.max(.2,Math.sin(l.ang))*1.15+.06);if(l.y>box.bot-reach){l.y=box.bot-reach;if(l.state==='dive'){l.state='bottom';l.timer=1.2+R()*2.4;}}}
 function scare(ls,x,y,r){ls.forEach(l=>{const cx=l.x+Math.cos(l.ang)*l.L*.5,cy=l.y+Math.sin(l.ang)*l.L*.5;if(Math.hypot(cx-x,cy-y)<r&&l.state!=='dive')l.state='dive';});}
 function waterCol(o){return o.larvae==='culex'?['#2e3218','#1a1c0c']:o.algae?['#3a4a1c','#1e2a10']:['#1e3a44','#0e2028'];}
 
