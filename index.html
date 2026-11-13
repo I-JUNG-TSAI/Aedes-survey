@@ -20,6 +20,11 @@ html,body{margin:0;height:100%;background:#000;color:#d8d2c4;overflow:hidden;fon
 #stat{position:absolute;top:14px;right:16px;text-align:right;font-size:13px;color:#cfc7b0;text-shadow:0 0 4px #000}
 #bite{width:130px;height:7px;border:1px solid #6b6252;margin:5px 0 0 auto;background:rgba(0,0,0,.4)}
 #bite b{display:block;height:100%;width:0;background:#b3261e}
+.gauge{width:130px;height:7px;border:1px solid #6b6252;margin:3px 0 4px auto;background:rgba(0,0,0,.4)}.gauge b{display:block;height:100%;width:100%;transition:width .3s}
+#hp b{background:#c8443a}#san b{background:#7a7ad8}.gauge.low{animation:gl .7s infinite alternate}@keyframes gl{from{border-color:#6b6252}to{border-color:#e0a0a0}}
+#sanv{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(40,10,60,.55) 75%,rgba(10,0,20,.92) 100%)}
+#hpv{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(120,0,0,.6) 100%)}
+#sflash{position:fixed;inset:0;pointer-events:none;z-index:4;background:#3a1a5a;opacity:0;transition:opacity .8s}
 #cross{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:rgba(230,225,210,.7)}
 #prompt{position:absolute;left:50%;top:56%;transform:translateX(-50%);font-size:15px;color:#f0e9d6;background:rgba(0,0,0,.55);padding:3px 12px;border:1px solid #5a5244;display:none;white-space:nowrap}
 #sub{position:absolute;left:50%;bottom:9%;transform:translateX(-50%);max-width:min(760px,88vw);text-align:center;font-size:17px;color:#f2ecdc;text-shadow:0 0 6px #000,0 1px 2px #000;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;opacity:0;transition:opacity .4s}
@@ -121,11 +126,11 @@ button{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webk
 <body>
 <canvas id="cv"></canvas>
 <svg id="grain" xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>
-<div id="vig"></div><div id="flash"></div>
+<div id="vig"></div><div id="sanv"></div><div id="hpv"></div><div id="flash"></div><div id="sflash"></div>
 <div id="hud">
   <div id="rec"><i></i>REC <span id="clock">17:42</span></div>
   <div id="obj"></div>
-  <div id="stat"><span id="cnt">已檢查 0 處</span><br>叮咬風險<div id="bite"><b></b></div><span id="bites"></span></div>
+  <div id="stat"><span id="cnt">已檢查 0 處</span><br>血量 <span id="hpn">100</span><div class="gauge" id="hp"><b></b></div>理智 <span id="sann">100</span><div class="gauge" id="san"><b></b></div>叮咬風險<div id="bite"><b></b></div><span id="bites"></span></div>
   <div id="cross"></div><div id="prompt"></div>
   <div id="sub"></div>
   <div id="hint">WASD 移動　滑鼠 轉向　E 互動　F 手電筒　Shift 快走　M 手冊</div>
@@ -186,7 +191,7 @@ function larvaSVG(type,labels){
 
 let L=null,G=null,renderer=null,AC=null,whineG=null,paused=true,started=false,looping=false;
 const keys={};
-function newState(){return{log:{},treated:{},unlocked:{},mistakes:[],ans:{},bites:0,bite:0,t:0,firstBite:false,formDone:false,ev:{}};}
+function newState(){return{log:{},treated:{},unlocked:{},mistakes:[],ans:{},hp:100,san:100,bites:0,bite:0,t:0,firstBite:false,formDone:false,ev:{}};}
 /* ================= 音效 ================= */
 function initAudio(){ if(AC) return; try{
   AC=new (window.AudioContext||window.webkitAudioContext)();
@@ -213,10 +218,21 @@ function tickSub(dt){
   if(subT>0){subT-=dt;if(subT<=0)$('sub').style.opacity=0;}
   else if(subQ.length&&!paused){const s=subQ.shift();$('sub').textContent=s.t;$('sub').style.opacity=1;subT=s.d;if(s.radio)beep();}
 }
+function gauges(){const S=G.S;$('hp').firstChild.style.width=S.hp+'%';$('san').firstChild.style.width=S.san+'%';$('hpn').textContent=Math.ceil(S.hp);$('sann').textContent=Math.ceil(S.san);
+  $('hp').classList.toggle('low',S.hp<30);$('san').classList.toggle('low',S.san<30);$('hpv').style.opacity=S.hp<40?(40-S.hp)/40*.9:0;}
+function hurt(n,why){const S=G.S;if(S.over)return;S.hp=Math.max(0,S.hp-n);(S.hurts=S.hurts||[]).push(why);gauges();if(S.hp<=0)setTimeout(()=>gameOver('hp'),600);}
+function stress(n,silent){const S=G.S;if(S.over)return;S.san=Math.max(0,S.san-n);if(!silent){const f=$('sflash');f.style.transition='none';f.style.opacity=.55;setTimeout(()=>{f.style.transition='opacity 1.2s';f.style.opacity=0;},60);burst(.5,90,.35);}
+  if(!silent||Math.random()<.05)gauges();if(S.san<=0)setTimeout(()=>gameOver('san'),600);}
+function calm(n){const S=G.S;S.san=Math.min(100,S.san+n);gauges();}
+function gameOver(kind){const S=G.S;if(S.over)return;S.over=1;try{document.exitPointerLock&&document.exitPointerLock();}catch(e){}
+  const t=kind==='hp'?['調查中止：受傷','你的傷勢太重，沒辦法繼續調查。學長叫了救護車。',`被蚊子叮 ${S.bites} 次${S.ev&&S.ev.dogBite?`、被狗咬 ${S.ev.dogBite} 次`:''}。`,'調查時穿長袖、擦防蚊液，不要在積水旁久站；遇到狗不跑、不直視、慢慢退開。']
+   :['調查中止：精神耗盡','你的精神撐不下去了。學長把你帶回車上，今天的調查到此為止。','蚊子一直圍著你，和民眾的對話也不順利。','處理掉陽性容器，蚊子會變少，也能讓你穩下來。和民眾說話時，先表明身分、說明原因、尊重對方的決定。'];
+  openPanel(`<div class="step">REC 中斷</div><h2>${t[0]}</h2><p class="say">${t[1]}</p><p>${t[2]}</p><p class="mut">${t[3]}</p><div class="row"><button class="pri" id="rs">重新開始這一關</button><button id="tt">回到標題</button></div>`);
+  $('rs').onclick=()=>startLevel(L.id);$('tt').onclick=showTitle;}
 function setObj(){
   $('obj').textContent=L.objective(G.S);
   $('cnt').textContent='已檢查 '+Object.keys(G.S.log).length+' 處';
-  $('bites').textContent=G.S.bites?'被叮 '+G.S.bites+' 次':'';
+  $('bites').textContent=G.S.bites?'被叮 '+G.S.bites+' 次':'';gauges();
 }
 /* ================= 面板 ================= */
 function openPanel(html){paused=true;$('pn').classList.remove('game');for(const k in keys)keys[k]=false;try{document.exitPointerLock&&document.exitPointerLock();}catch(e){}$('pn').innerHTML=html;$('panel').classList.add('open');$('pn').scrollTop=0;}
@@ -243,7 +259,7 @@ function runDialogue(key,onDone,onFail){
       }else{
         const mk=key+'_'+i+'_'+b.dataset.k;if(!S.dmiss[mk]){S.dmiss[mk]=1;mistake('溝通',`${D.who}：${c.t.replace(/[「」]/g,'')}　→ ${c.fb}`);}
         S.dfail[key]=(S.dfail[key]||0)+1;b.classList.add('wrong');
-        const tone=c.tone||'angry';
+        const tone=c.tone||'angry';if(tone==='angry')stress(15);else if(tone==='silent')stress(8);if(c.bite){hurt(25,'dog');stress(10);}
         if(tone==='angry'){burst(.5,160,.35);if(hu){if(!npc.userData.mood0)npc.userData.mood0=hu.L.mood||'calm';hu.setMood('angry');}}
         else if(tone==='locked'){burst(.6,320,.12,'bandpass');setTimeout(()=>burst(.6,300,.12,'bandpass'),180);}
         else if(tone==='radio')burst(.2,1400,.15,'bandpass');
@@ -288,7 +304,7 @@ function inspectItem(id){
       $('acts').querySelectorAll('button').forEach(b=>b.onclick=()=>{
         const a=o.acts[+b.dataset.k];
         if(a.ok){$('acts').querySelectorAll('button').forEach(x=>x.disabled=true);b.classList.add('right');
-          S.treated[id]=true;tally('處置',1);const it=G.items[id];if(it&&it.swarm){G.scene.remove(it.swarm);it.swarm=null;}
+          S.treated[id]=true;tally('處置',1);if(o.larvae==='aedes')calm(6);const it=G.items[id];if(it&&it.swarm){G.scene.remove(it.swarm);it.swarm=null;}
           $('afb').innerHTML=`<div class="fb good">${a.fb}</div><p class="mut">${o.learn}</p><div class="row"><button class="pri" id="cl2">記錄，繼續調查</button></div>`;
           $('cl2').onclick=()=>{closePanel();setObj();};$('cl2').scrollIntoView({block:'nearest'});
         }else{ mistake('處置',`${o.name}：選了「${a.t}」　→ ${a.fb}`);first=false;b.disabled=true;b.classList.add('wrong');
@@ -324,7 +340,7 @@ function grade(S,P,T){
    ...(tasks.length?[{k:'住戶狀況處理',v:`${td} / ${tasks.length}`,s:5*td/tasks.length,m:5}]:[]),
    {k:'檢查後完成處置',v:`${tr} / ${logged}`,s:logged?15*tr/logged:0,m:15},
    {k:'答題正確率',v:`${ok+bad?Math.round(acc*100):0}%（${ok} 對 / ${bad} 錯）`,s:40*acc,m:40},
-   {k:'被叮咬',v:`${S.bites} 次`,s:Math.max(0,5-S.bites),m:5}];
+   {k:'剩餘血量／理智',v:`${Math.ceil(S.hp)} / ${Math.ceil(S.san)}（被叮 ${S.bites} 次）`,s:5*(S.hp+S.san)/200,m:5}];
   const max=part.reduce((a,p)=>a+p.m,0),sc=Math.round(part.reduce((a,p)=>a+p.s,0)/max*100);
   const g=sc>=95?'S':sc>=85?'A':sc>=75?'B':sc>=65?'C':sc>=50?'D':'E';
   return {sc,g,part,cats,tasks};
@@ -447,7 +463,7 @@ function doInteract(){
   else if(it.type==='brief')runBrief(it.key);
   else if(it.type==='van')report();
 }
-function intro(){subQ=[];subT=0;$('sub').style.opacity=0;(L.intro||[]).forEach(t=>sub(t,5,true));}
+function intro(){subQ=[];subT=0;$('sub').style.opacity=0;(L.intro||[]).forEach(t=>sub(t,5,true));sub('（右上角是血量和理智。被蚊子叮、被狗咬會扣血；蚊子圍著你、和民眾起衝突會扣理智。任一項歸零，調查就會中止。）',7);}
 /* ================= 主迴圈 ================= */
 const ray=window.THREE?new THREE.Raycaster():null;let last=0,touchMove=null;
 function groundY(x,z,foot){let best=-1e9;const s=G.surf;for(let i=0;i<s.length;i++){const a=s[i];if(x<a.x0||x>a.x1||z<a.z0||z>a.z1)continue;let h=a.y;
@@ -470,7 +486,7 @@ function frame(now){
     }
     const gy=groundY(p.x,p.z,G.foot);G.foot=gy<G.foot?Math.max(gy,G.foot-dt*9):gy;
     G.camY+=(G.foot+1.6-G.camY)*Math.min(1,dt*14);
-    p.y=G.camY+Math.sin(G.bob)*.035;cam.rotation.set(G.pitch,G.yaw,Math.sin(G.bob*.5)*.006);
+    p.y=G.camY+Math.sin(G.bob)*.035;{const f=Math.max(0,.55-G.S.san/100)/.55;G.sanF=f;cam.rotation.set(G.pitch+Math.sin(G.S.t*.9)*.012*f,G.yaw+Math.sin(G.S.t*.53)*.02*f,Math.sin(G.bob*.5)*.006+Math.sin(G.S.t*.7)*.05*f);}
     const amb=L.ambient?L.ambient(p,G.foot):.5;
     G.hemi.intensity+=(amb-G.hemi.intensity)*Math.min(1,dt*3);
     if(G.flick>0){G.flick-=dt;G.torch.intensity=(G.flick>.9||(G.flick<.55&&G.flick>.4))?0:2.1;if(G.flick<=0&&G.figure)G.figure.visible=false;}
@@ -490,10 +506,12 @@ function frame(now){
         rate=k*(G.moving===2?.05:G.moving?.13:.26);
         if(MQ.t>=MQ.dur){MQ.on=0;MQ.next=16+Math.random()*30;G.amb.visible=false;}}}
     if(whineG)try{whineG.gain.setTargetAtTime(near*near*.09,AC.currentTime,.15);}catch(e){}
-    S.bite=Math.max(0,S.bite+rate*dt);
-    if(S.bite>=1){S.bite=0;S.bites++;$('flash').style.transition='none';$('flash').style.opacity=.45;setTimeout(()=>{$('flash').style.transition='opacity .9s';$('flash').style.opacity=0;},60);burst(.15,2500,.12,'highpass');
+    S.bite=Math.max(0,S.bite+rate*dt);if(near>.35)stress(near*.8*dt,true);
+    if(S.bite>=1){S.bite=0;S.bites++;hurt(5,'mosq');$('flash').style.transition='none';$('flash').style.opacity=.45;setTimeout(()=>{$('flash').style.transition='opacity .9s';$('flash').style.opacity=0;},60);burst(.15,2500,.12,'highpass');
       sub(S.firstBite?'又被叮了。':(L.biteHint||'你被叮了。在陽性容器旁邊站越久，被叮的機會越高。先處理掉，或是離開。'),4.5);S.firstBite=true;setObj();}
     $('bite').firstChild.style.width=(S.bite*100)+'%';
+    {const f=G.sanF||0;$('sanv').style.opacity=f?(.35+.65*f)*(.85+.15*Math.sin(S.t*2.6)):0;const k=Math.round(f*10);if(k!==G.sanK){G.sanK=k;cv.style.filter=k?`saturate(${1-k*.06}) contrast(${1+k*.03}) hue-rotate(${k*-3}deg)`:'';}
+     if(f>.3&&(G.hb=(G.hb||0)-dt)<=0){G.hb=1.1-f*.5;burst(.08,55,.25*f);setTimeout(()=>burst(.07,50,.18*f),180);}}
     ray.setFromCamera({x:0,y:0},cam);ray.far=2.9;const h=ray.intersectObjects(G.rayList,false)[0];
     G.target=h&&h.object.userData.it&&h.object.visible?h.object.userData.it:null;
     if(G.target&&(G.target.type==='door'||G.target.hideAfter)&&S.unlocked[G.target.key||L.doorKey])G.target=null;

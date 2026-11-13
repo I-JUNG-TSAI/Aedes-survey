@@ -148,7 +148,7 @@ LEVELS.market={id:'market',name:'第一關　廢棄市場與民宅調查',blurb:
    {t:'這棟樓的狀況？',pages:[2,3,4]},
    {t:'調查的流程？',pages:[5,6]},
    {t:'我查完了，回報結果。',report:1}]}},
- ambientMosq:true,biteHint:'你被叮了。這棟樓的斑蚊很多，蚊子在身邊時不要停在原地。陽性容器處理得越多，蚊子會越少。',
+ ambientMosq:true,biteHint:'你被叮了，血量下降。蚊子在身邊時不要停在原地，蚊子太多也會讓你的理智下降。陽性容器處理得越多，蚊子會越少。',
  scoreTasks(S){return [{name:'二樓之2 拒絕入戶',done:!!S.ev.angryDone},{name:'二樓之3 未入戶',done:!!S.unlocked.N}];},
  reportNote:'二樓之2拒絕入戶、二樓之3未入戶，都不計入',
  surfaces:[

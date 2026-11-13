@@ -71,7 +71,7 @@ const DLG={
    {t:'「好，作品我不動。那外面的鐵雕我就不檢查了，今天只看室內的部分就好。」',tone:'silent',re:'（他點點頭，轉身回去焊東西。門口那件碟形鐵雕，你沒有看。）',fb:'戶外會積水的作品正是要檢查的地方。不動作品，不等於不檢查。'},
    {t:'「好，作品我不動。不過會積水的作品，依規定要請您在一週內全部移進室內。」',tone:'angry',re:'「幾百公斤的東西，你來搬？」（他重新點起焊槍，不再理你。）',fb:'提出做不到的要求，等於逼他拒絕。要找的是他做得到的處理方式。'}]}],
   done:'他把焊槍掛回架上。「你要看就看。箱子上的甕都是我的收藏，小心一點。後面棚子在漏水，旁邊防火巷我很久沒進去了。」'},
- D:{who:'空屋門口',again:'（你又走近鐵門。狗馬上站了起來。）',retryHint:'再走近鐵門，就能重新開始。',btn:'繼續',nodes:[
+ D:{who:'空屋門口',again:'（你又走近鐵門。狗馬上站了起來。）',retryHint:'先退回巷子，再走近鐵門，就能重新開始。',btn:'繼續',nodes:[
   {say:'（一隻黑狗從鐵籠後面衝出來，隔著半開的鐵門對你狂吠，背上的毛都豎起來了。）',ch:[
    {t:'轉身快步離開，先拉開距離，再用無線電回報。',tone:'bite',bite:1,re:'（你一轉身，狗就追了出來，一口咬在你的小腿上。）',fb:'背對著狗跑，會引發牠追咬。被咬傷要立刻沖洗傷口、就醫，並通報主管。'},
    {t:'停下來，不直視牠，側身慢慢退到門外再回報。',ok:1,fb:'不跑、不直視、不背對，慢慢拉開距離。讓狗知道你沒有要進入牠的地盤。'},
@@ -310,7 +310,7 @@ function build(K){
   [[-21,-17],[-15.4,-11]].forEach(q=>{const w=q[1]-q[0],b=mesh(new THREE.PlaneGeometry(w,2),MT.bars.clone(),(q[0]+q[1])/2,1,-2);b.material.map=MT.bars.map.clone();b.material.map.needsUpdate=true;b.material.map.wrapS=THREE.RepeatWrapping;b.material.map.repeat.set(w/1.2,1);col.push({x0:q[0],x1:q[1],z0:-2.1,z1:-1.9,y0:0,y1:2.2});
     box(.08,2.1,.08,q[0]===-21?-17:-15.4,1.05,-2,MT.rust,nb);});
   const leaf=(x,ry)=>{const g=G2(),b=new THREE.Mesh(new THREE.PlaneGeometry(.8,2),MT.bars);b.position.x=.4*(ry>0?1:-1)*-1;g.add(b);put(g,x,1,-2,ry);return g;};
-  const gateL=leaf(-17,-1.15),gateR=leaf(-15.4,1.0);G.gateD=gateL;
+  const gateL=leaf(-17,-1.15),gateR=leaf(-15.4,1.0);G.gateD=gateL;G.gateD2=gateR;
   col.push({x0:-17,x1:-15.4,z0:-2.2,z1:-1.8,y0:0,y1:2.2,id:'gateD'});
   {const m=mesh(new THREE.BoxGeometry(.3,.4,.2),ph(0x6a7a62),-13.6,2.5,-8.05);mesh(new THREE.CylinderGeometry(.09,.09,.03,10),ph(0xc8c8c0),-13.6,2.5,-7.93).rotation.x=PI/2;}
   // 鐵籠、水管、臉盆
@@ -362,14 +362,14 @@ function dogEvent(K){const G=K.G,S=G.S,e=S.ev,D=G.dog;if(e.dogBusy)return;e.dogB
   D.state='bark';D.tx=-16.2;D.tz=-2.75;K.sub('（鐵門裡有東西衝了出來。）',2.5);
   const gate=G.gateD;
   setTimeout(()=>{if(G!==K.G)return;K.talk('D',()=>{e.dogBusy=0;S.unlocked.D=true;K.unblock('gateD');D.state='sit';D.tx=-13.1;D.tz=-.45;
-      const f=G.npcs.F;f.visible=true;K.moveNpc('F',-13.6,0,-.7);S.unlocked.F=true;K.interact(gate,{type:'deco',label:'查看：鐵門',text:'鐵門是半開的，鉸鏈鏽死了，關不起來。'});
+      const f=G.npcs.F;f.visible=true;K.moveNpc('F',-13.6,0,-.7);S.unlocked.F=true;[gate,G.gateD2].forEach(q=>K.interact(q,{type:'deco',label:'查看：鐵門',text:'鐵門是半開的，鉸鏈鏽死了，關不起來。'}));
       K.sub('餵狗的阿姨：「牠只是顧家啦。我抓著，你進去看。」',5);K.setObj();},
-    c=>{e.dogBusy=0;D.tx=-16.2;D.tz=-3.6;if(c&&c.bite){e.dogBite=(e.dogBite||0)+1;const fl=document.getElementById('flash');fl.style.transition='none';fl.style.opacity=.7;setTimeout(()=>{fl.style.transition='opacity 1.4s';fl.style.opacity=0;},80);K.burst(.3,200,.5);}
+    c=>{e.dogBusy=0;e.dog=0;e.dogAway=1;D.tx=-16.2;D.tz=-3.6;K.interact(G.gateD2,{type:'fn',label:'靠近：空屋的鐵門',fn:()=>dogEvent(K)});if(c&&c.bite){e.dogBite=(e.dogBite||0)+1;const fl=document.getElementById('flash');fl.style.transition='none';fl.style.opacity=.7;setTimeout(()=>{fl.style.transition='opacity 1.4s';fl.style.opacity=0;},80);K.burst(.3,200,.5);}
       K.interact(gate,{type:'fn',label:'靠近：空屋的鐵門',fn:()=>dogEvent(K)});});},1700);}
 
 LEVELS.studio={id:'studio',name:'第二關　藝術家的工寮',blurb:'巷子底的鐵皮工寮、堆滿雜物的防火巷，隔壁還有一間有狗的空屋。',
  start:{x:1.2,y:0,z:9,yaw:0},bg:0x140f1a,fog:.045,SITES,ITEMS,DLG,ambientMosq:true,
- biteHint:'你被叮了。這一帶的斑蚊很多，蚊子在身邊時不要停在原地。陽性容器處理得越多，蚊子會越少。',
+ biteHint:'你被叮了，血量下降。蚊子在身邊時不要停在原地，蚊子太多也會讓你的理智下降。陽性容器處理得越多，蚊子會越少。',
  intro:['學長：「這一關是巷子底的工寮。我在機車這邊，先過來聽一下狀況。」'],
  BRIEF:{S:{who:'學長',btn:'了解，出發',ask:'還有什麼要問的？',after:'學長：「先去找工寮門口那個人。」',
   pages:[
@@ -392,7 +392,8 @@ LEVELS.studio={id:'studio',name:'第二關　藝術家的工寮',blurb:'巷子�
  build,
  onUnlock(key,K){const G=K.G;if(key==='W'){K.unblock('gateW');K.moveNpc('W',1.9,0,-3.4);G.weld.wl.intensity=0;G.weld.sp.visible=false;G.weld=null;K.setObj();}},
  tick(K,dt,p){const G=K.G,S=G.S,e=S.ev;
-  if(!e.dog&&!S.unlocked.D&&p.z<1.6&&p.x>-19&&p.x<-12.6){e.dog=1;dogEvent(K);}
+  if(e.dogAway&&(p.z>3||p.x<-19.8||p.x>-11.8)){e.dogAway=0;K.sub('（狗還在鐵門後面盯著你。）',3);}
+  if(!e.dog&&!e.dogAway&&!e.dogBusy&&!S.unlocked.D&&p.z<1.6&&p.x>-19&&p.x<-12.6){e.dog=1;dogEvent(K);}
   if(!e.growl&&!e.dog&&p.x<-8&&p.z<5){e.growl=1;K.burst(.5,120,.25);K.sub('（左邊的空屋裡有低低的吼聲。）',3.5);}
   if(!e.inW&&p.z<-3&&p.x>-9&&p.x<9){e.inW=1;K.sub('（工作室裡很暗。到處是木箱，還有蓋著布的東西。）',4);K.sub('學長：「箱子上的東西不要碰。先找會裝水的。」',4.5,true);}
   if(!e.shed&&p.z<-20.5){e.shed=1;K.burst(.6,240,.4);K.sub('（頭上的鐵皮被風掀了一下，鏽屑掉下來。）',4);}
