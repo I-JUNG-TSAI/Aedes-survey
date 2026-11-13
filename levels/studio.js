@@ -70,7 +70,7 @@ const DLG={
    {t:'「好，作品我不動。有積水的地方我先指給您看，怎麼處理我們一起決定。」',ok:1,fb:'尊重他對作品的決定權，同時讓他參與處理。之後他才會自己維持。'},
    {t:'「好，作品我不動。那外面的鐵雕我就不檢查了，今天只看室內的部分就好。」',tone:'silent',re:'（他點點頭，轉身回去焊東西。門口那件碟形鐵雕，你沒有看。）',fb:'戶外會積水的作品正是要檢查的地方。不動作品，不等於不檢查。'},
    {t:'「好，作品我不動。不過會積水的作品，依規定要請您在一週內全部移進室內。」',tone:'angry',re:'「幾百公斤的東西，你來搬？」（他重新點起焊槍，不再理你。）',fb:'提出做不到的要求，等於逼他拒絕。要找的是他做得到的處理方式。'}]}],
-  done:'他把焊槍掛回架上。「你要看就看。箱子上的甕都是我的收藏，小心一點。後面棚子在漏水，旁邊防火巷我很久沒進去了。」'},
+  done:'他把焊槍掛回架上。「你要看就看。東西不要碰亂。」'},
  D:{who:'空屋門口',again:'（你又走近鐵門。狗馬上站了起來。）',retryHint:'先退回巷子，再走近鐵門，就能重新開始。',btn:'繼續',nodes:[
   {say:'（一隻黑狗從鐵籠後面衝出來，隔著半開的鐵門對你狂吠，背上的毛都豎起來了。）',ch:[
    {t:'轉身快步離開，先拉開距離，再用無線電回報。',tone:'bite',bite:1,re:'（你一轉身，狗就追了出來，一口咬在你的小腿上。）',fb:'背對著狗跑，會引發牠追咬。被咬傷要立刻沖洗傷口、就醫，並通報主管。'},
@@ -355,7 +355,7 @@ function build(K){
    const path=[[-18.5,-9.2],[-18.5,-6.2],[-16.2,-3.4],[-16.2,-1.4],[-15.2,4],[-11,10.5]];
    const D2=G.dog2={g,run:0,i:0,last:0};
    anim.push(t=>{const dt=Math.min(.05,t-(D2.last||t));D2.last=t;if(!D2.run||D2.i>=path.length){if(D2.i>=path.length)g.visible=false;return;}
-     g.scale.y=1;if(D2.wait>0){D2.wait-=dt;U.hd.rotation.x=Math.sin(t*18)>.2?-.4:.05;g.position.y=Math.abs(Math.sin(t*9))*.04;return;}const q=path[D2.i],dx=q[0]-g.position.x,dz=q[1]-g.position.z,d=Math.hypot(dx,dz),sp=6.5*dt;
+     g.scale.y=1;if(D2.wait>0){D2.wait-=dt;U.hd.rotation.x=Math.sin(t*18)>.2?-.4:.05;g.position.y=Math.abs(Math.sin(t*9))*.04;return;}const q=path[D2.i],dx=q[0]-g.position.x,dz=q[1]-g.position.z,d=Math.hypot(dx,dz),sp=11*dt;
      if(d<=sp){g.position.x=q[0];g.position.z=q[1];D2.i++;}else{g.position.x+=dx/d*sp;g.position.z+=dz/d*sp;}
      g.rotation.y=Math.atan2(dx,dz);g.position.y=Math.abs(Math.sin(t*22))*.09;U.legs.forEach((l,k)=>l.rotation.x=Math.sin(t*22+(k%2?0:PI))*.9);U.hd.rotation.x=Math.sin(t*15)>.2?-.35:.05;
      if(t-(D2.bk||0)>.28){D2.bk=t;K.burst(.08,700+R()*200,.4,'bandpass');}});}
@@ -377,26 +377,23 @@ function dogEvent(K){const G=K.G,S=G.S,e=S.ev,D=G.dog;if(e.dogBusy)return;e.dogB
     c=>{e.dogBusy=0;e.dog=0;e.dogAway=1;D.tx=-16.2;D.tz=-3.6;K.interact(G.gateD2,{type:'fn',label:'靠近：空屋的鐵門',fn:()=>dogEvent(K)});if(c&&c.bite){e.dogBite=(e.dogBite||0)+1;const fl=document.getElementById('flash');fl.style.transition='none';fl.style.opacity=.7;setTimeout(()=>{fl.style.transition='opacity 1.4s';fl.style.opacity=0;},80);K.burst(.3,200,.5);}
       K.interact(gate,{type:'fn',label:'靠近：空屋的鐵門',fn:()=>dogEvent(K)});});},1700);}
 
-LEVELS.studio={id:'studio',name:'第二關　藝術家的工寮',blurb:'巷子底的鐵皮工寮、堆滿雜物的防火巷，隔壁還有一間有狗的空屋。',
+LEVELS.studio={id:'studio',name:'第二關　藝術家的工寮',blurb:'巷子走到底的一間鐵皮屋。',
  start:{x:1.2,y:0,z:9,yaw:0},bg:0x140f1a,fog:.045,SITES,ITEMS,DLG,ambientMosq:true,
  biteHint:'你被叮了，血量下降。蚊子在身邊時不要停在原地，蚊子太多也會讓你的理智下降。陽性容器處理得越多，蚊子會越少。',
- intro:['學長：「這一關是巷子底的工寮。我在機車這邊，先過來聽一下狀況。」'],
- BRIEF:{S:{who:'學長',btn:'了解，出發',ask:'還有什麼要問的？',after:'學長：「先去找工寮門口那個人。」',
+ intro:['學長：「到了？我在機車這邊，先過來。」'],
+ BRIEF:{S:{who:'學長',btn:'了解，出發',ask:'還有什麼要問的？',after:'學長：「先去門口打聲招呼。」',
   pages:[
-   {h:'為什麼要來',t:'上一個點的病例，活動範圍包含這條巷子。巷子底的鐵皮工寮是一位藝術家的工作室，他白天晚上都在這裡，被叮的機會很高。'},
-   {h:'工寮',t:'工寮主人脾氣比較硬，最在意他的作品。門口的鐵雕、裡面的收藏，沒有他同意都不要動。會積水的地方要看，但怎麼處理要跟他商量。'},
-   {h:'防火巷',t:'工寮右邊有一條防火巷，堆了很多年的雜物。這種地方容器多、又沒人整理，要一個一個翻開來看。'},
-   {h:'隔壁的空屋',t:'工寮左邊有一間空屋，沒有人住，但有人在那裡餵流浪狗。空屋的容器沒有人倒，一定要查。靠近的時候注意狗。'},
-   {h:'遇到狗',t:'狗衝過來吠的時候：停下來，不要跑、不要直視、不要背對牠，側身慢慢退開。狗沒有被人控制住之前不要進去，先回報，我來聯絡里長找人。'},
-   {h:'回報',t:'工寮、防火巷、空屋都看完，回機車這邊跟我回報。'}],
+   {h:'為什麼要來',t:'上一個點的病例，平常會走這條巷子。巷子底那間鐵皮屋有人在用，被叮的機會不低。'},
+   {h:'這個點',t:'屋主是做藝術的，聽說脾氣不太好。我也只來過一次，裡面長什麼樣子不太清楚。周圍還有什麼，你自己繞一圈看。'},
+   {h:'注意安全',t:'這一帶有流浪狗。自己小心，有狀況用無線電叫我。'},
+   {h:'回報',t:'看完回機車這邊跟我說。'}],
   topics:[
-   {t:'為什麼要來這裡調查？',pages:[0]},
-   {t:'這個點的狀況？',pages:[1,2,3]},
-   {t:'遇到狗要怎麼辦？',pages:[4]},
+   {t:'為什麼要來這裡？',pages:[0]},
+   {t:'這個點的狀況？',pages:[1,2]},
    {t:'我查完了，回報結果。',report:1}]}},
  scoreTasks(S){return [{name:'空屋的狗',done:!!S.unlocked.D}];},
  npcLine:{W:'工寮主人：「看完跟我說一聲。作品不要碰。」',F:'餵狗的阿姨：「牠只是顧家啦。我抓著，你進去看。」'},
- objective(S){const u=S.unlocked;return !S.ev.brief_S?'目標：到機車旁邊找學長':!u.W?'目標：和工寮門口的人說話':!u.D?'目標：檢查工寮、右邊的防火巷，還有左邊的空屋':'目標：工寮、防火巷、空屋都要查。結束後回到機車回報';},
+ objective(S){const u=S.unlocked;return !S.ev.brief_S?'目標：到機車旁邊找學長':!u.W?'目標：和鐵皮屋門口的人說話':'目標：把這一帶會積水的地方找出來。結束後回到機車回報';},
  takeaways:['工作室、倉庫不是住家，但只要有人活動、有積水，就要調查。','別人的作品和收藏不能擅自移動。會積水的地方照樣要檢查，處理方式和所有人一起決定。','容易漏掉的位置：飲水機的接水底盤、沒蓋緊的桶子、帆布的凹陷、半埋在土裡的容器。','廢棄雜物堆的處理是整堆清運，不是只處理看到的那一個容器。','空屋沒有人倒水，是社區裡的重點。現場先清除，空屋本身要通報里長列管。','遇到狗：不跑、不直視、不背對，慢慢退開。動物沒有被控制住之前不進入，請里長找飼主或餵養的人到場。被咬傷要立刻沖洗傷口、就醫並通報。'],
  extraEnding(S){const e=S.ev;return `<h3>空屋的狗</h3><p>${S.unlocked.D?'你退到安全的距離，請里長找來餵狗的人把狗牽住之後才進入空屋。':'你沒有完成空屋的調查。空屋要查；有狗的時候，先請里長找到能控制狗的人。'}${e.dogBite?` 過程中你被狗攻擊了 ${e.dogBite} 次。實際調查時被咬傷，要立刻用清水和肥皂沖洗傷口、就醫，並通報主管。`:''}</p>`;},
  build,
@@ -405,7 +402,7 @@ LEVELS.studio={id:'studio',name:'第二關　藝術家的工寮',blurb:'巷子�
   if(e.dogAway&&(p.z>3||p.x<-19.8||p.x>-11.8)){e.dogAway=0;K.sub('（狗還在鐵門後面盯著你。）',3);}
   if(!e.dog&&!e.dogAway&&!e.dogBusy&&!S.unlocked.D&&p.z<1.6&&p.x>-19&&p.x<-12.6){e.dog=1;dogEvent(K);}
   if(!e.growl&&!e.dog&&p.x<-8&&p.z<5){e.growl=1;K.burst(.5,120,.25);K.sub('（左邊的空屋裡有低低的吼聲。）',3.5);}
-  if(!e.dog2&&S.unlocked.D&&p.x>-21&&p.x<-14.2&&p.z<-8.5){e.dog2=1;const D2=G.dog2;D2.run=1;D2.wait=.45;K.burst(.25,180,.6);K.burst(.15,900,.45,'bandpass');
+  if(!e.dog2&&S.unlocked.D&&p.x>-21&&p.x<-14.2&&p.z<-8.5){e.dog2=1;const D2=G.dog2;D2.run=1;D2.wait=.25;K.burst(.25,180,.6);K.burst(.15,900,.45,'bandpass');
     G.shake=.6;K.sub('（黑暗裡有東西撞開空桶，從你腳邊衝了出去！）',3.5);K.sub('餵狗的阿姨：「啊，還有一隻在裡面，牠很怕人啦。」',5);}
   if(G.shake>0){G.shake-=dt;G.camera.position.x+=(Math.random()-.5)*G.shake*.06;}
   if(!e.inW&&p.z<-3&&p.x>-9&&p.x<9){e.inW=1;K.sub('（工作室裡很暗。到處是木箱，還有蓋著布的東西。）',4);K.sub('學長：「箱子上的東西不要碰。先找會裝水的。」',4.5,true);}

@@ -325,7 +325,7 @@ function counts(ids){
 const r1=v=>Math.round(v*10)/10;
 function report(){
   const S=G.S,n=Object.keys(S.log).length,t=Object.keys(S.treated).length;
-  openPanel(`<div class="who">學長</div><div class="say">回來了？三層都看完了嗎？看完的話就回報，我來整理數字。</div>
+  openPanel(`<div class="who">學長</div><div class="say">回來了？都看完了嗎？看完的話就回報，我來整理數字。</div>
    <p class="mut">你目前檢查了 ${n} 處容器，處理完成 ${t} 處。回報之後調查就結束，不能再回去補查。</p>
    <div class="row"><button class="pri" id="be">回報，完成任務</button><button id="bk">還沒查完，回去繼續</button></div>`);
   $('bk').onclick=closePanel;$('be').onclick=ending;
@@ -538,7 +538,11 @@ addEventListener('keyup',e=>{keys[e.code]=false;});
 let drag=false;const cv=$('cv');
 cv.addEventListener('mousedown',e=>{if(paused)return;if(document.pointerLockElement===cv){doInteract();}else{drag=true;lock();}});
 addEventListener('mouseup',()=>drag=false);
-addEventListener('mousemove',e=>{if(paused||!G)return;if(document.pointerLockElement===cv||drag){G.yaw-=e.movementX*.0023;G.pitch-=e.movementY*.0023;}});
+let lockAt=0;document.addEventListener('pointerlockchange',()=>{lockAt=performance.now();});
+addEventListener('mousemove',e=>{if(paused||!G)return;if(document.pointerLockElement===cv||drag){let dx=e.movementX||0,dy=e.movementY||0;
+  // 部分瀏覽器在鎖定滑鼠時會送出一次異常的大位移（畫面突然轉向），直接丟掉
+  if(document.pointerLockElement===cv&&(performance.now()-lockAt<120||Math.abs(dx)>120||Math.abs(dy)>120))return;
+  G.yaw-=dx*.0023;G.pitch-=dy*.0023;}});
 let tL=null,tR=null;
 cv.addEventListener('touchstart',e=>{if(!IS_TOUCH)setTouchUI();for(const t of e.changedTouches){if(t.clientX<innerWidth/2&&!tL){tL={id:t.identifier,x:t.clientX,y:t.clientY};const j=$('joy');j.style.left=t.clientX+'px';j.style.top=t.clientY+'px';j.firstChild.style.transform='';j.style.display='block';}else if(!tR)tR={id:t.identifier,x:t.clientX,y:t.clientY};}e.preventDefault();},{passive:false});
 cv.addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(tL&&t.identifier===tL.id){const dx=(t.clientX-tL.x)/50,dy=(t.clientY-tL.y)/50;touchMove={x:Math.max(-1,Math.min(1,dx)),y:Math.max(-1,Math.min(1,dy))};$('joy').firstChild.style.transform=`translate(${touchMove.x*33}px,${touchMove.y*33}px)`;}
