@@ -331,13 +331,14 @@ function build(K){
   addItem('D3',pail(0x9a5ab8,.15,.19,.28,.5),-17.2,0,-8.9,.2);
 
   /* ---------- 狗 ---------- */
-  {const g=G2(),bk=ph(0x1a1614,{flatShading:true}),tn=ph(0x6a4a2a,{flatShading:true});
+  const makeDog=(c1,c2)=>{const g=G2(),bk=ph(c1,{flatShading:true}),tn=ph(c2,{flatShading:true});
    const a=(geo,m,x,y,z,p)=>{const q=new THREE.Mesh(geo,m);q.position.set(x,y,z);(p||g).add(q);return q;};
    a(new THREE.BoxGeometry(.26,.26,.62),bk,0,.46,0);a(new THREE.BoxGeometry(.24,.22,.2),bk,0,.5,.3);
-   const hd=G2();hd.position.set(0,.62,.42);g.add(hd);a(new THREE.BoxGeometry(.2,.19,.22),bk,0,0,.04,hd);a(new THREE.BoxGeometry(.11,.09,.16),tn,0,-.04,.2,hd);a(new THREE.BoxGeometry(.11,.02,.14),ph(0x8a2a2a),0,-.1,.19,hd);
+   const hd=G2();hd.position.set(0,.62,.42);g.add(hd);const legs=[];a(new THREE.BoxGeometry(.2,.19,.22),bk,0,0,.04,hd);a(new THREE.BoxGeometry(.11,.09,.16),tn,0,-.04,.2,hd);a(new THREE.BoxGeometry(.11,.02,.14),ph(0x8a2a2a),0,-.1,.19,hd);
    [-1,1].forEach(s=>{a(new THREE.BoxGeometry(.05,.1,.04),bk,s*.08,.13,-.02,hd);a(new THREE.BoxGeometry(.025,.025,.01),new THREE.MeshBasicMaterial({color:0xd8c060}),s*.055,.03,.151,hd);});
-   [[-.09,.22],[.09,.22],[-.09,-.24],[.09,-.24]].forEach(q=>a(new THREE.BoxGeometry(.07,.34,.07),q[1]>0?tn:bk,q[0],.17,q[1]));
-   const tl=a(new THREE.BoxGeometry(.04,.04,.26),bk,0,.6,-.4);tl.rotation.x=.7;
+   [[-.09,.22],[.09,.22],[-.09,-.24],[.09,-.24]].forEach(q=>{const l=a(new THREE.BoxGeometry(.07,.34,.07),q[1]>0?tn:bk,q[0],.17,q[1]);legs.push(l);});g.userData.legs=legs;
+   const tl=a(new THREE.BoxGeometry(.04,.04,.26),bk,0,.6,-.4);tl.rotation.x=.7;g.userData.hd=hd;g.userData.tl=tl;return g;};
+  {const g=makeDog(0x1a1614,0x6a4a2a),hd=g.userData.hd,tl=g.userData.tl;
    g.position.set(-15.9,0,-5.6);g.rotation.y=0;scene.add(g);g.traverse(o=>{if(o.isMesh)rayList.push(o);});
    const D=G.dog={g,hd,state:'lie',tx:-15.9,tz:-5.6,bark:0};g.scale.y=.6;
    anim.push((t)=>{const p=G.camera.position,dt=.016;
@@ -349,6 +350,15 @@ function build(K){
        if(t-D.bark>.42+R()*.3){D.bark=t;K.burst(.09,620+R()*120,.3,'bandpass');setTimeout(()=>K.burst(.07,520,.22,'bandpass'),110);}}
      else{hd.rotation.x=.1;g.position.y=0;tl.rotation.x=.4+Math.sin(t*9)*.25;}});
    deco(g,'查看：狗','黑色的米克斯，脖子上有項圈。牠一直盯著你。');}
+  // 空屋房間裡的第二隻狗：玩家進門時從黑暗中衝出去
+  {const g=makeDog(0x7a5a36,0xc8a070),U=g.userData;g.position.set(-20.3,0,-13.2);g.rotation.y=.6;g.scale.y=.55;scene.add(g);
+   const path=[[-18.5,-9.2],[-18.5,-6.2],[-16.2,-3.4],[-16.2,-1.4],[-15.2,4],[-11,10.5]];
+   const D2=G.dog2={g,run:0,i:0,last:0};
+   anim.push(t=>{const dt=Math.min(.05,t-(D2.last||t));D2.last=t;if(!D2.run||D2.i>=path.length){if(D2.i>=path.length)g.visible=false;return;}
+     g.scale.y=1;if(D2.wait>0){D2.wait-=dt;U.hd.rotation.x=Math.sin(t*18)>.2?-.4:.05;g.position.y=Math.abs(Math.sin(t*9))*.04;return;}const q=path[D2.i],dx=q[0]-g.position.x,dz=q[1]-g.position.z,d=Math.hypot(dx,dz),sp=6.5*dt;
+     if(d<=sp){g.position.x=q[0];g.position.z=q[1];D2.i++;}else{g.position.x+=dx/d*sp;g.position.z+=dz/d*sp;}
+     g.rotation.y=Math.atan2(dx,dz);g.position.y=Math.abs(Math.sin(t*22))*.09;U.legs.forEach((l,k)=>l.rotation.x=Math.sin(t*22+(k%2?0:PI))*.9);U.hd.rotation.x=Math.sin(t*15)>.2?-.35:.05;
+     if(t-(D2.bk||0)>.28){D2.bk=t;K.burst(.08,700+R()*200,.4,'bandpass');}});}
   {const f=person(-13.6,-50,-.7,.92,LOOKS.F,'F','交談：餵狗的阿姨');f.visible=false;f.rotation.y=.4;K.unblock('npcF');}
   light(0x8a7a9a,.35,8,-16,2.4,-5);
 
@@ -395,6 +405,9 @@ LEVELS.studio={id:'studio',name:'第二關　藝術家的工寮',blurb:'巷子�
   if(e.dogAway&&(p.z>3||p.x<-19.8||p.x>-11.8)){e.dogAway=0;K.sub('（狗還在鐵門後面盯著你。）',3);}
   if(!e.dog&&!e.dogAway&&!e.dogBusy&&!S.unlocked.D&&p.z<1.6&&p.x>-19&&p.x<-12.6){e.dog=1;dogEvent(K);}
   if(!e.growl&&!e.dog&&p.x<-8&&p.z<5){e.growl=1;K.burst(.5,120,.25);K.sub('（左邊的空屋裡有低低的吼聲。）',3.5);}
+  if(!e.dog2&&S.unlocked.D&&p.x>-21&&p.x<-14.2&&p.z<-8.5){e.dog2=1;const D2=G.dog2;D2.run=1;D2.wait=.45;K.burst(.25,180,.6);K.burst(.15,900,.45,'bandpass');
+    G.shake=.6;K.sub('（黑暗裡有東西撞開空桶，從你腳邊衝了出去！）',3.5);K.sub('餵狗的阿姨：「啊，還有一隻在裡面，牠很怕人啦。」',5);}
+  if(G.shake>0){G.shake-=dt;G.camera.position.x+=(Math.random()-.5)*G.shake*.06;}
   if(!e.inW&&p.z<-3&&p.x>-9&&p.x<9){e.inW=1;K.sub('（工作室裡很暗。到處是木箱，還有蓋著布的東西。）',4);K.sub('學長：「箱子上的東西不要碰。先找會裝水的。」',4.5,true);}
   if(!e.shed&&p.z<-20.5){e.shed=1;K.burst(.6,240,.4);K.sub('（頭上的鐵皮被風掀了一下，鏽屑掉下來。）',4);}
   if(!e.fig&&p.x>9.2&&p.x<11&&p.z<-5&&p.z>-12&&-Math.cos(G.yaw)>.7){e.fig=1;G.flick=1.3;G.figure.visible=true;K.burst(.9,150,.5);K.sub('……',1.6);K.sub('學長：「巷子底是死路，只有一棵樹。……怎麼了？」',5,true);}

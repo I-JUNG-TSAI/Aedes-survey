@@ -24,6 +24,8 @@ html,body{margin:0;height:100%;background:#000;color:#d8d2c4;overflow:hidden;fon
 #hp b{background:#c8443a}#san b{background:#7a7ad8}.gauge.low{animation:gl .7s infinite alternate}@keyframes gl{from{border-color:#6b6252}to{border-color:#e0a0a0}}
 #sanv{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(40,10,60,.55) 75%,rgba(10,0,20,.92) 100%)}
 #hpv{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(120,0,0,.6) 100%)}
+@media (pointer:coarse){#stat{right:98px}}
+@media (max-height:520px){#stat{top:8px;font-size:11px;line-height:1.25}#stat .gauge,#bite{width:96px;height:5px;margin:2px 0 3px auto}#rec{top:8px;font-size:12px}#obj{top:28px;font-size:12px;max-width:58vw}}
 #sflash{position:fixed;inset:0;pointer-events:none;z-index:4;background:#3a1a5a;opacity:0;transition:opacity .8s}
 #cross{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:rgba(230,225,210,.7)}
 #prompt{position:absolute;left:50%;top:56%;transform:translateX(-50%);font-size:15px;color:#f0e9d6;background:rgba(0,0,0,.55);padding:3px 12px;border:1px solid #5a5244;display:none;white-space:nowrap}
